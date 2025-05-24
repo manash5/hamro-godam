@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiMenu, FiX } from 'react-icons/fi'
-import Logo from './Logo'
+import Logo from '../Logo'
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
