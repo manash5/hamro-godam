@@ -5,6 +5,11 @@ import Hero from './components/Landing/Hero'
 
 import Footer from './components/Landing/Footer'
 import Loader from './components/Loader'
+import Features from './components/Landing/Features'
+import ProductManagement from './components/Landing/ProductManagement'
+import EmployeeManagement from './components/Landing/EmployeeManagement'
+import PricingSection from './components/Landing/PricingSection'
+import Testimonials from './components/Landing/Testimonials'
 
 export default function Home() {
   const [loading, setLoading] = useState(true)
@@ -25,6 +30,11 @@ export default function Home() {
       <main>
         <Suspense fallback={<Loader />}>
           <Hero />
+          <Features/>
+          <ProductManagement/>
+          <EmployeeManagement/>
+          <PricingSection />
+          <Testimonials />
         </Suspense>
       </main>
       <Footer />
