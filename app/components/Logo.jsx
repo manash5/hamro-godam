@@ -34,7 +34,6 @@ function Logo() {
           <path d="M4 15h2" />
         </motion.svg>
       </div>
-      <h1 className="text-xl font-bold text-primary-500">Hamro Godam</h1>
     </motion.div>
   )
 }
