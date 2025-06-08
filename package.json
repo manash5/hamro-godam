@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-email/components": "^0.0.41",
+    "@react-email/img": "0.0.11",
     "@react-three/drei": "^10.0.8",
     "framer-motion": "^12.12.2",
     "lucide-react": "^0.511.0",
@@ -16,9 +18,10 @@
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-facebook-login": "^4.1.1",
+    "react-email": "^4.0.16",
     "react-icons": "^5.5.0",
     "react-intersection-observer": "^9.16.0",
+    "resend": "^4.5.2",
     "three": "^0.176.0"
   },
   "devDependencies": {
