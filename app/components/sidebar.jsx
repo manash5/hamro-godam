@@ -36,9 +36,10 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`bg-[#011129] text-white min-h-full transition-all duration-300 ease-in-out overflow-hidden ${
-      isCollapsed ? 'w-[80px]' : 'w-[20%]'
-    }`}>
+    <div className="p-4 h-screen bg-slate-200">
+    <div className={`bg-[#1a1a2e] text-white h-full rounded-2xl transition-all duration-300 ease-in-out overflow-hidden shadow-xl ${
+        isCollapsed ? 'w-[80px]' : 'w-[280px]'
+      }`}>
       {/* Header with Logo and Toggle Button */}
       <div className="flex items-center justify-between my-10 px-5">
         <div className="logo flex items-center space-x-2">
@@ -68,6 +69,22 @@ const Sidebar = () => {
           </button>
         </div>
       )}
+
+      <div className="bottom-6 left-0 right-0 px-4 mb-10">
+          <div className={`flex items-center space-x-3 p-3 rounded-xl bg-white/5 border border-white/10 ${
+            isCollapsed ? 'justify-center' : ''
+          }`}>
+            <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-semibold text-sm">U</span>
+            </div>
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">User Name</p>
+                <p className="text-xs text-gray-400 truncate">user@example.com</p>
+              </div>
+            )}
+          </div>
+        </div>
 
       {/* Navigation */}
       <nav className="px-4 space-y-2">
@@ -102,6 +119,7 @@ const Sidebar = () => {
           </button>
         ))}
       </nav>
+    </div>
     </div>
   );
 }

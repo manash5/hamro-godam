@@ -105,19 +105,29 @@ const page = () => {
   const linePath = createLinePath(lineValues);
   return (
     <>
-    <div className="main w-full min-h-screen bg-slate-900 flex text-black">
+    <div className="flex min-h-screen bg-slate-200">
         <Sidebar />
-        <div className="right-side w-full min-h-screen bg-slate-200 flex flex-col items-center justify-between" >
-          {/* <div className="search-bar w-[90%] flex mt-10 mb-5 justtify-between items-center  rounded-xl p-2 bg-white ">
-            <Search className='text-black'/>
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              className="w-full p-2 focus:border-none text-black px-4"
-            />
-          </div> */}
-          <div className="middle-section text-black flex ">
-              <div className="min-w-xl mx-auto p-5 bg-slate-200">
+        <div className="flex-1 p-6 overflow-y-auto max-h-screen">
+          <div className="max-w-[1800px] mx-auto space-y-6 pb-6">
+            {/* Welcome Section */}    
+            <div className="relative my-5 flex justify-between items-center">
+              {/* Main heading */}
+              <div className="mb-6">
+                <div className="flex items-center mb-3">
+                  <div className="w-1.5 h-10 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full mr-4"></div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 bg-clip-text text-transparent">
+                    Welcome back, User!
+                  </h1>
+                </div>
+                <p className="text-gray-500 ml-6 text-lg font-medium">Here's what's happening with your store today.</p>
+              </div>
+              <button className="bg-blue-200 text-blue-500 px-4 h-fit py-1 rounded-md">Generate Report</button>
+            </div>
+
+            {/* Upper Section */}
+            <div className="grid grid-cols-12 gap-6">
+              {/* Popular Products Section - 5 columns */}
+              <div className="col-span-5">
                 <div className="bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-200">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Products</h2>
                   
@@ -163,9 +173,9 @@ const page = () => {
                   </div>
                 </div>
               </div>
-            <div className="p-4 bg-gray-200 h-auto">
-              <div className="max-w-6xl mx-auto">
-                
+
+              {/* Charts Section - 7 columns */}
+              <div className="col-span-7">
                 {/* Stats Cards Row */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
                   {/* Customers */}
@@ -378,21 +388,19 @@ const page = () => {
                 </div>
               </div>
             </div>
-        </div>
-         <div className="p-6 bg-gray-200">
-          <div className="min-w-6xl mx-auto">
+
+            {/* Lower Section - Three Cards */}
             <div className="grid grid-cols-3 gap-6">
-              
               {/* Customer & Expenses Card */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center justify-start gap-5 ">
+                <div className="flex items-center justify-start gap-5">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <TrendingUp className="w-6 h-6 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">Customer & Expenses</h3>
                 </div>
                 <div className="flex justify-end px-10">
-                <span className="text-xs text-gray-400 mb-5 ">22 - 29 nov 2025</span>
+                  <span className="text-xs text-gray-400 mb-5">22 - 29 nov 2025</span>
                 </div>
 
                 <div className="space-y-6 my-5">
@@ -433,7 +441,7 @@ const page = () => {
                   <h3 className="text-lg font-semibold text-gray-900">Dues & Pending Orders</h3>
                 </div>
                 <div className="flex justify-end px-10">
-                  <span className="text-xs text-gray-400 mb-5 ">22 - 29 nov 2025</span>
+                  <span className="text-xs text-gray-400 mb-5">22 - 29 nov 2025</span>
                 </div>
 
                 <div className="space-y-6 my-5">
@@ -467,14 +475,14 @@ const page = () => {
 
               {/* Sales & Discount Card */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center justify-start gap-5 ">
+                <div className="flex items-center justify-start gap-5">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <Tag className="w-6 h-6 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">Sales & Discount</h3>
                 </div>
                 <div className="flex justify-end px-10">
-                  <span className="text-xs text-gray-400 mb-5 ">22 - 29 nov 2025</span>
+                  <span className="text-xs text-gray-400 mb-5">22 - 29 nov 2025</span>
                 </div>
 
                 <div className="space-y-6 my-5">
@@ -505,12 +513,10 @@ const page = () => {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
-            </div>
-        </div>
+    </div>
     </>
   )
 }
