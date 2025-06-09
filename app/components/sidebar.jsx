@@ -11,24 +11,31 @@ import {
   Calendar,
   ChevronLeft,
 } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 
 const Sidebar = () => {
-  const [activeItem, setActiveItem] = useState('Dashboard');
+  const router = useRouter();
+  const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard' },
-    { icon: Package, label: 'Inventory' },
-    { icon: ShoppingCart, label: 'Products' },
-    { icon: User, label: 'User' },
-    { icon: Settings, label: 'Settings' },
-    { icon: Receipt, label: 'Expenses' },
-    { icon: Calendar, label: 'Calendar' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    { icon: Package, label: 'Inventory', path: '/inventory' },
+    { icon: ShoppingCart, label: 'Products', path: '/products' },
+    { icon: User, label: 'User', path: '/user' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: Receipt, label: 'Expenses', path: '/expenses' },
+    { icon: Calendar, label: 'Calendar', path: '/calendar' },
   ];
 
-  const handleItemClick = (label) => {
-    if (activeItem === label) return;
-    setActiveItem(label);
+  // Get the active item based on current pathname
+  const getActiveItem = () => {
+    const item = sidebarItems.find(item => item.path === pathname);
+    return item ? item.label : 'Dashboard';
+  };
+
+  const handleItemClick = (label, path) => {
+    router.push(path);
   };
 
   const toggleSidebar = () => {
@@ -91,15 +98,15 @@ const Sidebar = () => {
         {sidebarItems.map((item, index) => (
           <button
             key={index}
-            onClick={() => handleItemClick(item.label)}
+            onClick={() => handleItemClick(item.label, item.path)}
             className={`flex items-center space-x-3 px-4 py-3 rounded-xl w-full text-left transition-all duration-300 ease-in-out group relative ${
-              activeItem === item.label
+              pathname === item.path
                 ? 'bg-gradient-to-r from-blue-600/30 to-blue-500/20 border border-blue-500/40 text-blue-300'
                 : 'hover:bg-gray-800/50 text-gray-300 hover:text-white border border-transparent'
             }`}
           >
             <item.icon className={`w-5 h-5 flex-shrink-0 ${
-              activeItem === item.label 
+              pathname === item.path 
                 ? 'text-blue-400' 
                 : 'group-hover:text-blue-400'
             } transition-colors duration-300`} />
