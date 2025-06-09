@@ -1,6 +1,6 @@
 import React from 'react'
 import Sidebar from '../components/sidebar'
-import {Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw,  CheckCircle, Tag } from 'lucide-react'
+import {Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw,  CheckCircle, Tag, Sparkles, FileText } from 'lucide-react'
 
 const page = () => {
 
@@ -121,7 +121,17 @@ const page = () => {
                 </div>
                 <p className="text-gray-500 ml-6 text-lg font-medium">Here's what's happening with your store today.</p>
               </div>
-              <button className="bg-blue-200 text-blue-500 px-4 h-fit py-1 rounded-md">Generate Report</button>
+              <button className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5">
+                {/* Background shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                
+                {/* Button content */}
+                <div className="relative flex items-center space-x-2">
+                  <FileText className="w-4 h-4 group-hover:rotate-3 transition-transform duration-300" />
+                  <span>Generate Report</span>
+                  <Sparkles className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
+                </div>
+              </button>
             </div>
 
             {/* Upper Section */}

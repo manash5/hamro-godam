@@ -37,7 +37,7 @@ const Sidebar = () => {
 
   return (
     <div className="p-4 h-screen bg-slate-200">
-    <div className={`bg-[#1a1a2e] text-white h-full rounded-2xl transition-all duration-300 ease-in-out overflow-hidden shadow-xl ${
+    <div className={`bg-[#011129] text-white h-full rounded-2xl transition-all duration-300 ease-in-out overflow-hidden shadow-xl ${
         isCollapsed ? 'w-[80px]' : 'w-[280px]'
       }`}>
       {/* Header with Logo and Toggle Button */}
