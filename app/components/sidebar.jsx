@@ -10,6 +10,8 @@ import {
   Receipt, 
   Calendar,
   ChevronLeft,
+  Store, 
+  BookUser,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -20,8 +22,10 @@ const Sidebar = () => {
 
   const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Package, label: 'Inventory', path: '/inventory' },
+    { icon: Store, label: 'Inventory', path: '/inventory' },
+    {icon: Package, label: 'Orders', path: './order' },
     { icon: ShoppingCart, label: 'Products', path: '/products' },
+    {icon: BookUser, label: 'Suppliers', path: '/suppliers' },
     { icon: User, label: 'User', path: '/user' },
     { icon: Settings, label: 'Settings', path: '/settings' },
     { icon: Receipt, label: 'Expenses', path: '/expenses' },
