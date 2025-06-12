@@ -107,7 +107,7 @@ const page = () => {
     <>
     <div className="flex min-h-screen bg-slate-200">
         <Sidebar />
-        <div className="flex-1 p-6 overflow-y-auto max-h-screen">
+        <div className="flex-1 p-6 overflow-y-auto max-h-screen hide-scrollbar">
           <div className="max-w-[1800px] mx-auto space-y-6 pb-6">
             {/* Welcome Section */}    
             <div className="relative my-5 flex justify-between items-center">

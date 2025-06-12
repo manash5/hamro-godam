@@ -23,7 +23,7 @@ const Sidebar = () => {
   const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Store, label: 'Inventory', path: '/inventory' },
-    {icon: Package, label: 'Orders', path: './order' },
+    {icon: Package, label: 'Orders', path: './orders' },
     { icon: ShoppingCart, label: 'Products', path: '/products' },
     {icon: BookUser, label: 'Suppliers', path: '/suppliers' },
     { icon: User, label: 'User', path: '/user' },
