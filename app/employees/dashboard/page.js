@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 
+
 const Page = () => {
   return (
     <div className="flex h-screen w-screen bg-[#f3f9fb] font-sans">
@@ -14,12 +15,14 @@ const Page = () => {
 
           </li>
           <li>
-  {/* <Link href="/employees/inventory" legacyBehavior>
-    <a className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition">
-      Inventory
-    </a>
-  </Link> */}
+  <Link 
+    href="/employees/inventory" 
+    className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
+  >
+    Inventory
+  </Link>
 </li>
+
           <li>
             <span className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition cursor-pointer">Products</span>
           </li>
