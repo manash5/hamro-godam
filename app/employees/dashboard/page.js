@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 
-
 const Page = () => {
   return (
     <div className="flex h-screen w-screen bg-[#f3f9fb] font-sans">
@@ -11,29 +10,45 @@ const Page = () => {
       <aside className="w-[220px] bg-[#1d3557] text-[#c4f5d5] p-5 flex-shrink-0 flex flex-col">
         <h2 className="text-2xl mb-8 font-bold">HAMROGODAM</h2>
         <ul className="space-y-2">
-          <li className="bg-[#2b4d74] rounded px-2 py-2">
-
+          <li>
+            <Link
+              href="/employees/inventory"
+              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
+            >
+              Inventory
+            </Link>
           </li>
           <li>
-  <Link 
-    href="/employees/inventory" 
-    className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
-  >
-    Inventory
-  </Link>
-</li>
-
-          <li>
-            <span className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition cursor-pointer">Products</span>
+            <Link
+              href="/employees/products"
+              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
+            >
+              Products
+            </Link>
           </li>
           <li>
-            <span className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition cursor-pointer">User</span>
+            <Link
+              href="/employees/user"
+              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
+            >
+              User
+            </Link>
           </li>
           <li>
-            <span className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition cursor-pointer">Settings</span>
+            <Link
+              href="/employees/settings"
+              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
+            >
+              Settings
+            </Link>
           </li>
           <li>
-            <span className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition cursor-pointer">Expenses</span>
+            <Link
+              href="/employees/expenses"
+              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
+            >
+              Expenses
+            </Link>
           </li>
         </ul>
       </aside>
