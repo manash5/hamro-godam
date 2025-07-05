@@ -26,7 +26,7 @@ const Sidebar = () => {
     {icon: Package, label: 'Orders', path: './orders' },
     { icon: ShoppingCart, label: 'Products', path: '/products' },
     {icon: BookUser, label: 'Suppliers', path: '/suppliers' },
-    { icon: User, label: 'User', path: '/user' },
+    { icon: User, label: 'User', path: '/users' },
     { icon: Settings, label: 'Settings', path: '/settings' },
     { icon: Receipt, label: 'Expenses', path: '/expenses' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
