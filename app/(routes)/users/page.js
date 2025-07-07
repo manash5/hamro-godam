@@ -11,7 +11,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { ChevronDown, MoreHorizontal, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import Sidebar from '../components/sidebar';
+import Sidebar from '../../../components/sidebar';
 
 const App = () => {
   const [users] = useState([
@@ -191,9 +191,9 @@ const App = () => {
   );
 
   return (
-    <div className="flex bg-slate-200 min-h-screen">
+    <div className="flex bg-slate-100 min-h-screen">
         <Sidebar />
-      <div className="min-w-7xl px-10 mx-5 bg-slate-200 my-10 rounded-xl">
+      <div className="min-w-7xl px-10 mx-5 bg-slate-100 my-10 rounded-xl">
         {/* Header */}
         <div className="my-6 ">
           <h1 className="text-4xl font-bold text-gray-900 px-10">Users</h1>

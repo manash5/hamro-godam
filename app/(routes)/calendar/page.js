@@ -1,8 +1,8 @@
 'use client';
 
 import React from "react";
-import { ContinuousCalendar } from "../components/ContinuousCalendar";
-import Sidebar from '../components/sidebar'
+import { ContinuousCalendar } from "../../../components/ContinuousCalendar";
+import Sidebar from '../../../components/sidebar'
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 

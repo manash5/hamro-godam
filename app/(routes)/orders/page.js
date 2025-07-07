@@ -1,8 +1,8 @@
 "use client"
 import { useState } from 'react';
 import { Search, Plus, MoreHorizontal, Menu, Bell } from 'lucide-react';
-import Sidebar from '../components/sidebar'
-import AddOrderModal from '../components/order/AddOrderModel'
+import Sidebar from '../../../components/sidebar'
+import AddOrderModal from '../../../components/order/AddOrderModel'
 
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -150,13 +150,13 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-200">
+    <div className="flex h-screen bg-slate-100">
       <Sidebar />
       
       {/* Main Content */}
       <div className="flex-1 overflow-auto py-10">
         {/* Page Header */}
-        <div className="bg-slate-200 px-6 py-6 border-b border-gray-200">
+        <div className="bg-slate-100 px-6 py-6 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-gray-900">Orders</h1>

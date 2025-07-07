@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Search, Plus, MoreHorizontal, Package2 } from 'lucide-react';
 
-import Sidebar from '../components/sidebar'
+import Sidebar from '../../../components/sidebar'
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -144,9 +144,9 @@ export default function ProductsPage() {
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
       {/* Main Content */}
-      <div className="flex-1 overflow-auto bg-slate-200 pt-10">
+      <div className="flex-1 overflow-auto bg-slate-100 pt-10">
         {/* Header */}
-        <div className="bg-slate-200 border-b border-gray-200 px-6 py-4 rounded-xl mb-5 mx-5">
+        <div className="bg-slate-100 border-b border-gray-100 px-6 py-4 rounded-xl mb-5 mx-5">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-gray-900">Products</h1>

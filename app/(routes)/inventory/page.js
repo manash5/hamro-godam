@@ -1,7 +1,7 @@
 "use client"
 import { useState } from 'react';
 import { Search, Package, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react';
-import Sidebar from '../components/sidebar';
+import Sidebar from '../../../components/sidebar';
 
 export default function page() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -133,9 +133,9 @@ export default function page() {
   const inStockItems = inventoryItems.filter(item => item.stock >= 20).length;
 
   return (
-    <div className="min-h-screen bg-slate-200  flex">
+    <div className="min-h-screen bg-slate-100  flex">
       <Sidebar/>
-      <div className="min-w-7xl overflow-y-auto hide-scrollbar max-h-screen mx-auto py-4 px-5 my-5 bg-slate-200 rounded-xl">
+      <div className="min-w-7xl overflow-y-auto hide-scrollbar max-h-screen mx-auto py-4 px-5 my-5 bg-slate-100 rounded-xl">
         {/* Header */}
         <div className="mb-8 ">
           <div className="flex items-center justify-between mb-5 bg-white p-3 rounded-xl">

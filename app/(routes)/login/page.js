@@ -1,8 +1,8 @@
 "use client"
 import React, {useState} from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import Navbar from '../components/Login/Navbar'
-import Footer from '../components/Landing/Footer'
+import Navbar from '../../../components/Login/Navbar'
+import Footer from '../../../components/Landing/Footer'
 import { useSession, signIn, signOut } from "next-auth/react"
 
 

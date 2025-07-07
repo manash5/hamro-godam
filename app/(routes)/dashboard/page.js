@@ -1,5 +1,5 @@
 import React from 'react'
-import Sidebar from '../components/sidebar'
+import Sidebar from '../../../components/sidebar'
 import {Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw,  CheckCircle, Tag, Sparkles, FileText } from 'lucide-react'
 
 const page = () => {
@@ -105,7 +105,7 @@ const page = () => {
   const linePath = createLinePath(lineValues);
   return (
     <>
-    <div className="flex min-h-screen bg-slate-200">
+    <div className="flex min-h-screen bg-slate-100">
         <Sidebar />
         <div className="flex-1 p-6 overflow-y-auto max-h-screen hide-scrollbar">
           <div className="max-w-[1800px] mx-auto space-y-6 pb-6">

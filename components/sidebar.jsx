@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   Store, 
   BookUser,
+  Trello, 
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -27,9 +28,10 @@ const Sidebar = () => {
     { icon: ShoppingCart, label: 'Products', path: '/products' },
     {icon: BookUser, label: 'Suppliers', path: '/suppliers' },
     { icon: User, label: 'User', path: '/users' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
     { icon: Receipt, label: 'Expenses', path: '/expenses' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
+    {icon: Trello, label: 'Kanban', path: '/kanban' }, 
+    { icon: Settings, label: 'Settings', path: '/settings' }
   ];
 
   // Get the active item based on current pathname
@@ -47,7 +49,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="p-4 h-screen bg-slate-200">
+    <div className="p-4 h-screen bg-slate-100">
     <div className={`bg-[#011129] text-white h-full rounded-2xl transition-all duration-300 ease-in-out overflow-hidden shadow-xl ${
         isCollapsed ? 'w-[80px]' : 'w-[280px]'
       }`}>
