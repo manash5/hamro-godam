@@ -1,6 +1,6 @@
 import React from 'react'
 import Sidebar from '../../../components/sidebar'
-import {Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw,  CheckCircle, Tag, Sparkles, FileText } from 'lucide-react'
+import { Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw, CheckCircle, Tag, Sparkles, FileText } from 'lucide-react'
 
 const page = () => {
 
@@ -103,15 +103,26 @@ const page = () => {
 
   const lineValues = budgetExpensesData.map(d => d.line);
   const linePath = createLinePath(lineValues);
+  const chartData = [
+    { month: 'Jan', blue: 115, yellow: 180, green: 50 },
+    { month: 'Feb', blue: 280, yellow: 200, green: 140 },
+    { month: 'Mar', blue: 310, yellow: 280, green: 190 },
+    { month: 'Apr', blue: 220, yellow: 150, green: 45 },
+    { month: 'May', blue: 240, yellow: 190, green: 115 },
+    { month: 'Jun', blue: 150, yellow: 200, green: 75 },
+    { month: 'Jul', blue: 95, yellow: 210, green: 95 }
+  ];
+
+  const maxValue = 350;
+
   return (
     <>
-    <div className="flex min-h-screen bg-slate-100">
+      <div className="flex min-h-screen bg-slate-100">
         <Sidebar />
         <div className="flex-1 p-6 overflow-y-auto max-h-screen hide-scrollbar">
           <div className="max-w-[1800px] mx-auto space-y-6 pb-6">
-            {/* Welcome Section */}    
+            {/* Welcome Section (unchanged from your second file) */}    
             <div className="relative my-5 flex justify-between items-center">
-              {/* Main heading */}
               <div className="mb-6">
                 <div className="flex items-center mb-3">
                   <div className="w-1.5 h-10 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full mr-4"></div>
@@ -122,10 +133,7 @@ const page = () => {
                 <p className="text-gray-500 ml-6 text-lg font-medium">Here's what's happening with your store today.</p>
               </div>
               <button className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5">
-                {/* Background shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                
-                {/* Button content */}
                 <div className="relative flex items-center space-x-2">
                   <FileText className="w-4 h-4 group-hover:rotate-3 transition-transform duration-300" />
                   <span>Generate Report</span>
@@ -134,49 +142,38 @@ const page = () => {
               </button>
             </div>
 
-            {/* Upper Section */}
+            {/* Upper Section - Now with exact design from first file */}
             <div className="grid grid-cols-12 gap-6">
-              {/* Popular Products Section - 5 columns */}
-              <div className="col-span-5">
-                <div className="bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-200">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Products</h2>
+              {/* Left Side - Popular Products (from first file) */}
+              <div className="col-span-4">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-[90vh] overflow-y-auto">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6">Popular Products</h2>
                   
-                  <div className="space-y-4 overflow-y-auto max-h-[55vh]">
-                    {products.map((product, index) => (
-                      <div key={product.id} className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            {/* Product Image Placeholder */}
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
-                              {product.image}
-                            </div>
-                            
-                            {/* Product Info */}
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-900 text-lg mb-1">
-                                {product.name}
-                              </h3>
-                              <div className="flex items-center space-x-3">
-                                <span className="text-xl font-bold text-blue-500">
-                                  {product.price}
-                                </span>
-                                <div className="flex items-center">
-                                  {renderStars(product.rating)}
-                                </div>
+                  <div className="space-y-4">
+                    {products.map((product) => (
+                      <div key={product.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center space-x-4">
+                          <div className="text-2xl">{product.image}</div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 text-sm">
+                              {product.name}
+                            </h3>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-blue-600 font-bold text-sm">
+                                {product.price}
+                              </span>
+                              <div className="flex">
+                                {renderStars(product.rating)}
                               </div>
                             </div>
                           </div>
-                          
-                          {/* Sales Info */}
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <div className="bg-blue-200 p-2 rounded-full">
-                              <ShoppingBag className="w-6 h-6 " />
-                            </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-gray-900">{product.sold}</div>
-                              <div className="text-sm text-gray-500">Sold</div>
-                            </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                            📦
                           </div>
+                          <span className="text-sm font-medium text-gray-900">{product.sold}</span>
                         </div>
                       </div>
                     ))}
@@ -184,14 +181,16 @@ const page = () => {
                 </div>
               </div>
 
-              {/* Charts Section - 7 columns */}
-              <div className="col-span-7">
-                {/* Stats Cards Row */}
+              {/* Right Side (from first file) */}
+              <div className="col-span-8">
+                {/* Stats Cards (from first file) */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
                   {/* Customers */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm ">
-                    <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center mb-4">
-                      <Users className="w-6 h-6 text-cyan-600" />
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
+                        <Users className="w-6 h-6 text-cyan-600" />
+                      </div>
                     </div>
                     <div className="text-2xl font-bold text-gray-900 mb-1">30,567</div>
                     <div className="flex items-center justify-between">
@@ -201,9 +200,11 @@ const page = () => {
                   </div>
 
                   {/* Products */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-                      <Package className="w-6 h-6 text-amber-600" />
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <Package className="w-6 h-6 text-yellow-600" />
+                      </div>
                     </div>
                     <div className="text-2xl font-bold text-gray-900 mb-1">3,037</div>
                     <div className="flex items-center justify-between">
@@ -213,9 +214,11 @@ const page = () => {
                   </div>
 
                   {/* Sales */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                      <TrendingUp className="w-6 h-6 text-red-600" />
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-red-600" />
+                      </div>
                     </div>
                     <div className="text-2xl font-bold text-gray-900 mb-1">205,09</div>
                     <div className="flex items-center justify-between">
@@ -225,9 +228,11 @@ const page = () => {
                   </div>
 
                   {/* Refunds */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                      <RefreshCw className="w-6 h-6 text-green-600" />
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <RefreshCw className="w-6 h-6 text-green-600" />
+                      </div>
                     </div>
                     <div className="text-2xl font-bold text-gray-900 mb-1">21,647</div>
                     <div className="flex items-center justify-between">
@@ -237,296 +242,171 @@ const page = () => {
                   </div>
                 </div>
 
-                {/* Charts Row */}
-                <div className="grid grid-cols-2 gap-6">
-                  
-                  {/* Left Side - Budget vs Expenses Chart */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <div className="flex items-center space-x-6 mb-6">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-cyan-500 rounded-sm"></div>
-                        <span className="text-sm font-medium text-gray-700">Budget</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-gray-700 rounded-sm"></div>
-                        <span className="text-sm font-medium text-gray-700">Expenses</span>
-                      </div>
-                    </div>
-                    
-                    {/* Custom Bar Chart */}
-                    <div className="relative h-80">
-                      <div className="absolute right-0 top-0 text-xs text-gray-400">0.8M</div>
-                      <div className="absolute right-0 top-1/2 text-xs text-gray-400">0.6M</div>
-                      
-                      <div className="flex items-end justify-between h-full pt-8 pb-8 relative">
-                        {budgetExpensesData.map((data, index) => (
-                          <div key={index} className="flex flex-col items-center w-8">
-                            <div className="relative flex flex-col items-center justify-end" style={{ height: '240px' }}>
-                              {/* Budget Bar */}
-                              <div 
-                                className="w-6 bg-cyan-500 mb-1"
-                                style={{ height: `${data.budget}%` }}
-                              ></div>
-                              {/* Expenses Bar */}
-                              <div 
-                                className="w-6 bg-gray-700"
-                                style={{ height: `${data.expenses}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-xs text-gray-500 mt-2 transform -rotate-45 origin-left">
-                              {data.month}
-                            </span>
-                          </div>
-                        ))}
-                        
-                        {/* Red trend line overlay */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ top: '32px', height: '240px' }}>
-                          <path
-                            d={linePath}
-                            stroke="#ef4444"
-                            strokeWidth="3"
-                            fill="none"
-                            vectorEffect="non-scaling-stroke"
-                          />
-                          {lineValues.map((value, index) => (
-                            <circle
-                              key={index}
-                              cx={`${(index / (lineValues.length - 1)) * 100}%`}
-                              cy={`${100 - value}%`}
-                              r="4"
-                              fill="#ef4444"
-                            />
-                          ))}
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Side */}
-                  <div className="space-y-6">
-                    
-                    {/* Earnings Chart */}
-                    <div className="bg-gradient-to-br from-emerald-50 to-teal-100 rounded-2xl p-6 relative overflow-hidden">
-                      <div className="flex justify-between items-start mb-6">
-                        <div>
-                          <h3 className="text-xl font-semibold text-teal-800 mb-1">Earnings</h3>
-                          <p className="text-sm text-teal-600">Monthly revenue</p>
+                {/* Charts Section (from first file) */}
+                <div className="space-y-6">
+                {/* Two Cards Side by Side */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Dues & Pending Orders */}
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-5 h-5 text-blue-600" />
                         </div>
-                        <div className="text-right">
-                          <div className="text-3xl font-bold text-teal-900">$50,922</div>
-                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Dues & Pending Orders</h3>
                       </div>
-                      
-                      {/* Custom Earnings Bar Chart */}
-                      <div className="flex items-end justify-between h-32 space-x-2">
-                        {earningsData.map((height, index) => (
-                          <div
-                            key={index}
-                            className="bg-teal-600 rounded-t-lg flex-1"
-                            style={{ height: `${height}%` }}
-                          ></div>
-                        ))}
-                      </div>
+                      <span className="text-xs text-gray-400">22 - 29 nov</span>
                     </div>
 
-                    {/* Yearly Sales with Pie Chart */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm">
+                    <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-3xl font-bold text-gray-900 mb-1">$239,228</div>
-                          <p className="text-sm text-gray-600">Yearly sales</p>
+                        <span className="text-gray-700">Dues</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-semibold text-gray-900">230.0</span>
+                          <div className="flex items-center space-x-1">
+                            <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
+                            </svg>
+                            <span className="text-sm text-green-500">+124%</span>
+                          </div>
                         </div>
-                        
-                        {/* Custom Donut Chart */}
-                        <div className="relative w-24 h-24">
-                          <svg className="w-24 h-24 transform -rotate-90">
-                            <circle
-                              cx="48"
-                              cy="48"
-                              r="36"
-                              stroke="#3b82f6"
-                              strokeWidth="12"
-                              fill="transparent"
-                              strokeDasharray="56.5 226"
-                              strokeDashoffset="0"
-                            />
-                            <circle
-                              cx="48"
-                              cy="48"
-                              r="36"
-                              stroke="#ec4899"
-                              strokeWidth="12"
-                              fill="transparent"
-                              strokeDasharray="45.2 226"
-                              strokeDashoffset="-56.5"
-                            />
-                            <circle
-                              cx="48"
-                              cy="48"
-                              r="36"
-                              stroke="#f59e0b"
-                              strokeWidth="12"
-                              fill="transparent"
-                              strokeDasharray="33.9 226"
-                              strokeDashoffset="-101.7"
-                            />
-                            <circle
-                              cx="48"
-                              cy="48"
-                              r="36"
-                              stroke="#10b981"
-                              strokeWidth="12"
-                              fill="transparent"
-                              strokeDasharray="33.9 226"
-                              strokeDashoffset="-135.6"
-                            />
-                            <circle
-                              cx="48"
-                              cy="48"
-                              r="36"
-                              stroke="#374151"
-                              strokeWidth="12"
-                              fill="transparent"
-                              strokeDasharray="56.5 226"
-                              strokeDashoffset="-169.5"
-                            />
-                          </svg>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">Pending Orders</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-semibold text-gray-900">102</span>
+                          <div className="flex items-center space-x-1">
+                            <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
+                            </svg>
+                            <span className="text-sm text-red-500">-56%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sales & Discount */}
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Tag className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Sales & Discount</h3>
+                      </div>
+                      <span className="text-xs text-gray-400">22 - 29 nov 2025</span>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">Sales</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-semibold text-gray-900">1000.0</span>
+                          <div className="flex items-center space-x-1">
+                            <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
+                            </svg>
+                            <span className="text-sm text-green-500">+24%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">Discount</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-semibold text-gray-900">210.00</span>
+                          <div className="flex items-center space-x-1">
+                            <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
+                            </svg>
+                            <span className="text-sm text-red-500">-12%</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Chart Below */}
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6 text-center">Units sold</h3>
+                  
+                  {/* Chart */}
+                  <div className="relative h-80">
+                    {/* Y-axis labels */}
+                    <div className="absolute left-0 top-0 text-xs text-gray-400">350</div>
+                    <div className="absolute left-0 top-1/4 text-xs text-gray-400">300</div>
+                    <div className="absolute left-0 top-2/4 text-xs text-gray-400">250</div>
+                    <div className="absolute left-0 top-3/4 text-xs text-gray-400">200</div>
+                    <div className="absolute left-0 bottom-8 text-xs text-gray-400">150</div>
+                    <div className="absolute left-0 bottom-4 text-xs text-gray-400">100</div>
+                    <div className="absolute left-0 bottom-0 text-xs text-gray-400">50</div>
+                    <div className="absolute left-0 -bottom-4 text-xs text-gray-400">0</div>
+
+                    {/* Chart area */}
+                    <div className="ml-8 mr-4 h-72 relative">
+                      <svg className="w-full h-full" viewBox="0 0 400 280">
+                        {/* Grid lines */}
+                        <defs>
+                          <pattern id="grid" width="57" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 57 0 L 0 0 0 40" fill="none" stroke="#f3f4f6" strokeWidth="1"/>
+                          </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#grid)" />
+                        
+                        {/* Blue line */}
+                        <polyline
+                          fill="none"
+                          stroke="#3b82f6"
+                          strokeWidth="2"
+                          points="0,165 57,120 114,90 171,140 228,125 285,165 342,195"
+                        />
+                        
+                        {/* Yellow line */}
+                        <polyline
+                          fill="none"
+                          stroke="#fbbf24"
+                          strokeWidth="2"
+                          points="0,100 57,80 114,56 171,130 228,90 285,80 342,70"
+                        />
+                        
+                        {/* Green line */}
+                        <polyline
+                          fill="none"
+                          stroke="#10b981"
+                          strokeWidth="2"
+                          points="0,230 57,140 114,91 171,235 228,165 285,205 342,185"
+                        />
+                        
+                        {/* Data points */}
+                        {chartData.map((point, index) => (
+                          <g key={index}>
+                            <circle cx={index * 57} cy={280 - (point.blue * 280 / maxValue)} r="4" fill="#3b82f6" />
+                            <circle cx={index * 57} cy={280 - (point.yellow * 280 / maxValue)} r="4" fill="#fbbf24" />
+                            <circle cx={index * 57} cy={280 - (point.green * 280 / maxValue)} r="4" fill="#10b981" />
+                          </g>
+                        ))}
+                      </svg>
+                    </div>
+
+                    {/* X-axis labels */}
+                    <div className="flex justify-between mt-2 ml-8 mr-4">
+                      {chartData.map((point, index) => (
+                        <span key={index} className="text-xs text-gray-400">{point.month}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
               </div>
             </div>
 
-            {/* Lower Section - Three Cards */}
-            <div className="grid grid-cols-3 gap-6">
-              {/* Customer & Expenses Card */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center justify-start gap-5">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Customer & Expenses</h3>
-                </div>
-                <div className="flex justify-end px-10">
-                  <span className="text-xs text-gray-400 mb-5">22 - 29 nov 2025</span>
-                </div>
-
-                <div className="space-y-6 my-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-8">
-                      <span className="text-gray-700 font-medium">Customer Growth</span>
-                      <span className="text-lg font-semibold text-gray-900">175.00</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
-                        <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
-                      </svg>
-                      <span className="text-sm font-medium text-green-500">+124%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-8">
-                      <span className="text-gray-700 font-medium">Expenses</span>
-                      <span className="text-lg font-semibold text-gray-900">10.00</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
-                        <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
-                      </svg>
-                      <span className="text-sm font-medium text-red-500">-56%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dues & Pending Orders Card */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center justify-start gap-8">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Dues & Pending Orders</h3>
-                </div>
-                <div className="flex justify-end px-10">
-                  <span className="text-xs text-gray-400 mb-5">22 - 29 nov 2025</span>
-                </div>
-
-                <div className="space-y-6 my-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-8">
-                      <span className="text-gray-700 font-medium">Dues</span>
-                      <span className="text-lg font-semibold text-gray-900">230.00</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
-                        <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
-                      </svg>
-                      <span className="text-sm font-medium text-green-500">+124%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-8">
-                      <span className="text-gray-700 font-medium">Pending Orders</span>
-                      <span className="text-lg font-semibold text-gray-900">102</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
-                        <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
-                      </svg>
-                      <span className="text-sm font-medium text-red-500">-56%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sales & Discount Card */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center justify-start gap-5">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Tag className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Sales & Discount</h3>
-                </div>
-                <div className="flex justify-end px-10">
-                  <span className="text-xs text-gray-400 mb-5">22 - 29 nov 2025</span>
-                </div>
-
-                <div className="space-y-6 my-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-8">
-                      <span className="text-gray-700 font-medium">Sales</span>
-                      <span className="text-lg font-semibold text-gray-900">1000.00</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
-                        <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
-                      </svg>
-                      <span className="text-sm font-medium text-green-500">+24%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-8">
-                      <span className="text-gray-700 font-medium">Discount</span>
-                      <span className="text-lg font-semibold text-gray-900">210.00</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
-                        <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
-                      </svg>
-                      <span className="text-sm font-medium text-red-500">-12%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
-    </div>
+      </div>
     </>
   )
 }
