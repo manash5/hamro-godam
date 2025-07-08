@@ -49,7 +49,7 @@ function Navbar() {
       transition={{ duration: 0.5 }}
     >
       <div className="container mx-auto px-4 md:px-8 flex items-center justify-between">
-        <div className="logo flex items-center space-x-2">
+        <div className="logo flex items-center space-x-2 ">
         <Logo />
         <h1 className="text-xl font-bold text-primary-500">Hamro Godam</h1>
         </div>

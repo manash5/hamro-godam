@@ -16,6 +16,7 @@
     "dotenv": "^17.0.1",
     "framer-motion": "^12.12.2",
     "lucide-react": "^0.511.0",
+    "mongoose": "^8.16.2",
     "next": "15.3.2",
     "next-auth": "^4.24.11",
     "pg": "^8.16.3",
