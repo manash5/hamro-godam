@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { User } from '@/models/user/user';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
   try {
@@ -14,11 +15,13 @@ export async function POST(request) {
     }
 
     await connectToDB();
+    const hashedPassword = await bcrypt.hash(body.password, 10);
+
     const newUser = await User.create({
       FirstName: body.FirstName,
       LastName: body.LastName,
       email: body.email,
-      password: body.password
+      password: hashedPassword
     });
 
     return NextResponse.json(
