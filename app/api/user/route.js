@@ -24,7 +24,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     
-    if (!body?.email || !body?.name || !body?.password) {
+    if (!body?.email || !body?.FirstName || !body?.LastName || !body?.password) {
       return NextResponse.json(
         { message: "Invalid payload" },
         { status: 400 }
@@ -33,7 +33,8 @@ export async function POST(request) {
 
     await connectToDB();
     const newUser = await User.create({
-      name: body.name,
+      FirstName: body.FirstName,
+      LastName: body.LastName,
       email: body.email,
       password: body.password
     });
@@ -49,4 +50,3 @@ export async function POST(request) {
     );
   }
 }
-

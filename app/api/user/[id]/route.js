@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { User } from '@/models/user/user';
 
-
-// Dynamic route handlers (GET, PATCH, DELETE by ID)
-export async function GETAll(request, { params }) {
+// GET user by ID
+export async function GET(request, { params }) {
   try {
     const { id } = params;
     await connectToDB();
@@ -29,6 +28,7 @@ export async function GETAll(request, { params }) {
   }
 }
 
+// PATCH update user by ID
 export async function PATCH(request, { params }) {
   try {
     const { id } = params;
@@ -43,7 +43,8 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    user.name = body.name || user.name;
+    user.FirstName = body.FirstName || user.FirstName;
+    user.LastName = body.LastName || user.LastName;
     user.email = body.email || user.email;
     user.password = body.password || user.password;
     await user.save();
@@ -60,6 +61,7 @@ export async function PATCH(request, { params }) {
   }
 }
 
+// DELETE user by ID
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
