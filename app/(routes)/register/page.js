@@ -3,179 +3,180 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import Navbar from '@/components/Login/Navbar';
 import { useRouter } from 'next/navigation'; 
+import { useForm } from 'react-hook-form';
 
-const page=() => {
-    const router = useRouter(); 
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+const page = () => {
+  const router = useRouter(); 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors }
+  } = useForm();
 
-  const handleSubmit = () => {
-    if (!agreedToTerms) {
-      alert('Please agree to the Terms of Service and Privacy Policy');
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    console.log('Registration data:', formData);
-    alert('Registration successful!');
-  };
+  const onSubmit = async (data) => {
+    const payload = {
+        FirstName: data.firstName,
+        LastName: data.lastName,
+        email: data.email,
+        password: data.password
+    };
+    await fetch('/api/register', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    console.log('Registration data:', payload);
+    router.push('/login')
+    };
 
   const handleClick = () => {
-    router.push(`/${name.toLowerCase()}`); 
+    router.push(`/login`); 
   };
+
+  const password = watch('password');
 
   return (
     <>
-    <Navbar name = 'Login'/>
-    <div className="min-h-screen bg-slate-200 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-black">
-      <div className="max-w-2xl w-full space-y-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Create your account</h2>
-            <p className="text-sm text-gray-600">
-              By signing up, you agree to our{' '}
-              <a href="#" className="text-blue-500 hover:text-blue-600">Private Policy</a>
-              {' '}and{' '}
-              <a href="#" className="text-blue-500 hover:text-blue-600">Terms of Service</a>
-            </p>
-          </div>
+      <Navbar name='Login' />
+      <div className="min-h-screen bg-slate-200 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-black">
+        <div className="max-w-2xl w-full space-y-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">Create your account</h2>
+              <p className="text-sm text-gray-600">
+                By signing up, you agree to our{' '}
+                <a href="#" className="text-blue-500 hover:text-blue-600">Private Policy</a>
+                {' '}and{' '}
+                <a href="#" className="text-blue-500 hover:text-blue-600">Terms of Service</a>
+              </p>
+            </div>
 
-          {/* Form */}
-          <div className="space-y-6">
-            {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Form */}
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+              {/* Name Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="First Name"
+                    {...register('firstName', { required: 'First name is required' })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400"
+                  />
+                  {errors.firstName && <span className="text-red-500 text-xs">{errors.firstName.message}</span>}
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Last Name"
+                    {...register('lastName', { required: 'Last name is required' })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400"
+                  />
+                  {errors.lastName && <span className="text-red-500 text-xs">{errors.lastName.message}</span>}
+                </div>
+              </div>
+
+              {/* Email */}
               <div>
                 <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  placeholder="First Name"
-                  required
+                  type="email"
+                  placeholder="Enter email address"
+                  {...register('email', {
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^\S+@\S+$/i,
+                      message: 'Invalid email address'
+                    }
+                  })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400"
                 />
+                {errors.email && <span className="text-red-500 text-xs">{errors.email.message}</span>}
               </div>
-              <div>
+
+              {/* Password */}
+              <div className="relative">
                 <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  placeholder="Last Name"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter password"
+                  {...register('password', {
+                    required: 'Password is required',
+                    minLength: { value: 6, message: 'Password must be at least 6 characters' }
+                  })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400 pr-12"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+                {errors.password && <span className="text-red-500 text-xs">{errors.password.message}</span>}
               </div>
-            </div>
 
-            {/* Email */}
-            <div>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Enter email address"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400"
-              />
-            </div>
+              {/* Confirm Password */}
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirm Password"
+                  {...register('confirmPassword', {
+                    required: 'Please confirm your password',
+                    validate: value => value === password || 'Passwords do not match'
+                  })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400 pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+                {errors.confirmPassword && <span className="text-red-500 text-xs">{errors.confirmPassword.message}</span>}
+              </div>
 
-            {/* Password */}
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder="Enter password"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400 pr-12"
-              />
+              {/* Terms Checkbox */}
+              <div className="flex items-center">
+                <input
+                  id="terms"
+                  type="checkbox"
+                  {...register('agreedToTerms', { required: 'You must accept the terms' })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="terms" className="ml-2 block text-sm text-gray-600">
+                  I accept the{' '}
+                  <a href="#" className="text-blue-500 hover:text-blue-600">Terms of Use</a>
+                  {' '}&{' '}
+                  <a href="#" className="text-blue-500 hover:text-blue-600">Privacy Policy</a>
+                </label>
+              </div>
+              {errors.agreedToTerms && <span className="text-red-500 text-xs">{errors.agreedToTerms.message}</span>}
+
+              {/* Register Button */}
               <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                type="submit"
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium text-sm"
               >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
+                Register
               </button>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder="Confirm Password"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400 pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-
-            {/* Terms Checkbox */}
-            <div className="flex items-center">
-              <input
-                id="terms"
-                type="checkbox"
-                checked={agreedToTerms}
-                onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-600">
-                I accept the{' '}
-                <a href="#" className="text-blue-500 hover:text-blue-600">Terms of Use</a>
-                {' '}&{' '}
-                <a href="#" className="text-blue-500 hover:text-blue-600">Privacy Policy</a>
-              </label>
-            </div>
-
-            {/* Register Button */}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium text-sm"
-            >
-              Register
-            </button>
+            </form>
 
             {/* Divider */}
-            <div className="relative">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
               </div>
@@ -200,31 +201,28 @@ const page=() => {
               </button>
               
               <button
-                onClick={() => signIn('facebook')}
+                type="button"
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 group hover:border-gray-400 hover:shadow-md"
-                >
-                <img className = "w-8 h-5 mr-3 group-hover:scale-110 transition-transform duration-200" src = '/meta.png'></img>
-                
+              >
+                <img className="w-8 h-5 mr-3 group-hover:scale-110 transition-transform duration-200" src='/meta.png' alt="Meta" />
                 <span className="text-gray-700 font-medium">Login with Meta</span>
-            </button>
+              </button>
             </div>
-          </div>
 
-          {/* Sign In Link */}
-          <div className="text-center mt-6">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <a onClick={handleClick} className="text-blue-500 hover:text-blue-600 font-medium">
-                login
-              </a>
-            </p>
+            {/* Sign In Link */}
+            <div className="text-center mt-6">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <a onClick={handleClick} className="text-blue-500 hover:text-blue-600 font-medium" style={{ cursor: 'pointer' }}>
+                  login
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </>
   );
-}   
+};
 
-
-export default page; 
+export default page;
