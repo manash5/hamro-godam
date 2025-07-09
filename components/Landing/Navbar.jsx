@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiMenu, FiX } from 'react-icons/fi'
 import Logo from '../Logo'
+import { useRouter } from 'next/navigation'
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const router = useRouter(); 
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,7 +49,10 @@ function Navbar() {
       transition={{ duration: 0.5 }}
     >
       <div className="container mx-auto px-4 md:px-8 flex items-center justify-between">
+        <div className="logo flex items-center space-x-2 ">
         <Logo />
+        <h1 className="text-xl font-bold text-primary-500">Hamro Godam</h1>
+        </div>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8">
@@ -65,9 +70,10 @@ function Navbar() {
               </li>
             ))}
           </ul>
-          <a href="#contact" className="btn-primary bg-white px-8 py-3 rounded-md text-blue-950 hover:bg-primary-800 font-semibold transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+          <button type = 'button' onClick={()=>router.push('/login')}
+          className="btn-primary bg-white px-8 py-3 rounded-md text-blue-950 hover:bg-primary-800 font-semibold transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
             Get Started
-          </a>
+          </button>
         </div>
 
         {/* Mobile Menu Button */}
