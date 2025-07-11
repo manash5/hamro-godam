@@ -1,11 +1,6 @@
 import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
-  id: {
-    type: Number,
-    required: true,
-    unique: true,
-  },
   name: {
     type: String,
     required: true,
@@ -18,9 +13,17 @@ const productSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  price: {
+    type: Number,
+    required: true,
+  },
+  category: {
+    type: String,
+    required: true,
+  }
 }, {
-  timestamps: true,
-  collection: 'Products',
+  timestamps: true,            
+  collection: 'Products'        
 });
 
 productSchema.set('toJSON', {

@@ -19,7 +19,7 @@
     "framer-motion": "^12.12.2",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.511.0",
-    "mongoose": "^8.16.2",
+    "mongoose": "^8.16.3",
     "next": "15.3.2",
     "next-auth": "^4.24.11",
     "pg": "^8.16.3",
