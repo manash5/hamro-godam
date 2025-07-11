@@ -1,3 +1,4 @@
+import { number } from 'framer-motion';
 import mongoose from 'mongoose';
 
 const employeeSchema = new mongoose.Schema({
@@ -10,13 +11,22 @@ const employeeSchema = new mongoose.Schema({
     required: true,
     unique: true, // emails must be unique
   },
+  contact_number : {
+    type: Number,
+    required: true,
+  },
+  address: {
+    type: String,
+    required: true,
+  },
+
   password: {
     type: String,
     required: true,
   }
 }, {
   timestamps: true,
-  collection: 'Employees'
+  collection: 'Employee'
 });
 
 employeeSchema.set('toJSON', {
