@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { User } from '@/models/user/user';
 import bcrypt from 'bcryptjs';
+import { generateToken } from '@/utils/token';
 
 export async function POST(request) {
   try {
@@ -9,6 +10,7 @@ export async function POST(request) {
     await connectToDB();
 
     const user = await User.findOne({ email });
+    console.log(user); 
     if (!user) {
       return NextResponse.json({ exists: false }, { status: 200 });
     }
@@ -19,8 +21,11 @@ export async function POST(request) {
       return NextResponse.json({ exists: false }, { status: 200 });
     }
 
-    return NextResponse.json({ exists: true, id: user._id }, { status: 200 });
+    const accessToken = generateToken({user: user.toJSON()})
+
+    return NextResponse.json({ exists: true, id: user._id, token: accessToken }, { status: 200 });
   } catch (error) {
+    console.log(error); 
     return NextResponse.json({ exists: false, error: 'Server error' }, { status: 500 });
   }
 }
