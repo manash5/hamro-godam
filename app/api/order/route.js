@@ -1,0 +1,27 @@
+import { NextResponse } from 'next/server';
+import connectToDB from '@/lib/connectDb';
+import { Order } from '@/models/order/order';
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    await connectToDB();
+
+    const newOrder = new Order({
+      customerName: body.customerName,
+      items: body.items,                 // Should be an array
+      totalAmount: body.totalAmount,
+      status: body.status,               // e.g., 'pending', 'shipped'
+      deliveryDate: body.deliveryDate,   // ISO string or Date
+    });
+
+    await newOrder.save();
+
+    return NextResponse.json(
+      { data: newOrder, message: 'Order created successfully' },
+      { status: 201 }
+    );
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+  }
+}
