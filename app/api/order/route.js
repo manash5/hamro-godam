@@ -2,6 +2,18 @@ import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { Order } from '@/models/order/order';
 
+
+export async function GET() {
+  try {
+    await connectToDB();
+    const orders = await Order.find().sort({ createdAt: -1 });
+    return NextResponse.json({ data: orders }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+  }
+}
+
+
 export async function POST(request) {
   try {
     const body = await request.json();
