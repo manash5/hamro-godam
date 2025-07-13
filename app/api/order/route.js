@@ -9,10 +9,13 @@ export async function POST(request) {
 
     const newOrder = new Order({
       customerName: body.customerName,
-      items: body.items,                 // Should be an array
-      totalAmount: body.totalAmount,
-      status: body.status,               // e.g., 'pending', 'shipped'
-      deliveryDate: body.deliveryDate,   // ISO string or Date
+      customerNumber: body.customerNumber,
+      customerAddress: body.customerAddress,
+      productName: body.productName,    
+      productQuantity: body.productQuantity,
+      totalAmount: body.totalAmount,    
+      status: body.status,               
+      deliveryDate: body.deliveryDate,   
     });
 
     await newOrder.save();
