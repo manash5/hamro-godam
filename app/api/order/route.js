@@ -28,6 +28,7 @@ export async function POST(request) {
       totalAmount: body.totalAmount,    
       status: body.status,               
       deliveryDate: body.deliveryDate,   
+      payment: body.paymentMethod || body.payment, // <-- Ensures payment is always set
     });
 
     await newOrder.save();

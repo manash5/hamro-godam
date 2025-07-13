@@ -34,11 +34,16 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
 
-    // Example fields — adjust as per your schema
+    // Update order fields
     order.status = body.status ?? order.status;
-    order.items = body.items ?? order.items;
+    order.payment = (body.paymentMethod || body.payment) ?? order.payment;
     order.totalAmount = body.totalAmount ?? order.totalAmount;
     order.deliveryDate = body.deliveryDate ?? order.deliveryDate;
+    order.customerName = body.customerName ?? order.customerName;
+    order.customerNumber = body.customerNumber ?? order.customerNumber;
+    order.customerAddress = body.customerAddress ?? order.customerAddress;
+    order.productName = body.productName ?? order.productName;
+    order.productQuantity = body.productQuantity ?? order.productQuantity;
 
     await order.save();
 
