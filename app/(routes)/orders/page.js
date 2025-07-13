@@ -5,7 +5,10 @@ import { Search, Plus, MoreHorizontal } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
 import AddOrderModal from '@/components/order/AddOrderModel';
 
+
+
 export default function OrdersPage() {
+  const [editOrder, setEditOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState('All Customers');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
@@ -107,7 +110,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-100">
+    <div className="flex h-screen bg-slate-100 text-balck">
       <Sidebar />
 
       <div className="flex-1 overflow-auto py-10">
