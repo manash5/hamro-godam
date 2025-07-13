@@ -166,7 +166,7 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Event title"
               />
             </div>
