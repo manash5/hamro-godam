@@ -258,7 +258,7 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-6 border-t border-gray-200">
+        <div className="flex items-center justify-between p-6 border-t border-gray-20">
           <div>
             {event?.id && (
               <Button variant="danger" onClick={handleDelete}>
