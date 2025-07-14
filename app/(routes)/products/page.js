@@ -16,10 +16,12 @@ export default function ProductsPage() {
     price: '',
     stockQuantity: '',
     category: '',
+    image: '', // Add image field
     variations: [
       { type: 'Color', options: ['Black', 'White', 'Blue'], status: 'ACTIVE' }
     ]
   });
+  const [uploading, setUploading] = useState(false); // Track upload state
   
   const products = [
     {
@@ -124,6 +126,31 @@ export default function ProductsPage() {
     }));
   };
 
+  // Handle image file selection and upload
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.path) {
+        setProductForm(prev => ({ ...prev, image: data.path }));
+      } else {
+        alert('Image upload failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Image upload error: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -136,14 +163,12 @@ export default function ProductsPage() {
           stock: Number(productForm.stockQuantity),
           price: Number(productForm.price),
           category: productForm.category,
-          // Add image and status if you have them in your form
-          // image: productForm.image,
-          // status: productForm.status,
+          image: productForm.image, // Include image path
+          // status: productForm.status, // Add if you have status in your form
         }),
       });
       const result = await res.json();
       if (res.ok) {
-        // Optionally update your UI here
         setShowAddProductModal(false);
       } else {
         alert('Failed to save product: ' + result.error);
@@ -300,7 +325,7 @@ export default function ProductsPage() {
       {/* Add Product Modal */}
       {showAddProductModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar text-black">
             {/* Modal Header */}
             <div className="bg-slate-800 text-white p-6 rounded-t-2xl sticky top-0 z-10">
               <div className="flex items-center justify-between">
@@ -389,11 +414,28 @@ export default function ProductsPage() {
                       <div className="text-4xl text-gray-400 mb-2">📷</div>
                       <p className="text-sm text-gray-600 mb-1">Add Images</p>
                       <p className="text-xs text-gray-400">PNG, JPG up to 10MB</p>
+                      {productForm.image && (
+                        <div className="mt-2 flex flex-col items-center">
+                          <img src={productForm.image} alt="Product Preview" className="h-24 rounded border mb-1" />
+                          <p className="text-xs text-gray-500">{productForm.image}</p>
+                        </div>
+                      )}
+                      {uploading && <p className="text-blue-600 text-sm mt-1">Uploading...</p>}
                     </div>
                   </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="product-image-upload"
+                    style={{ display: 'none' }}
+                    onChange={handleImageChange}
+                    disabled={uploading}
+                  />
                   <button
                     type="button"
                     className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200"
+                    onClick={() => document.getElementById('product-image-upload').click()}
+                    disabled={uploading}
                   >
                     Browse Files
                   </button>
