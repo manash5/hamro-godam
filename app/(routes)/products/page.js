@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from 'react';
-import { Search, Plus, MoreHorizontal, Package2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 
 import Sidebar from '../../../components/sidebar'
 
@@ -10,20 +10,26 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showEditProductModal, setShowEditProductModal] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
     price: '',
     stockQuantity: '',
     category: '',
-    image: '', // Add image field
+    image: '',
     variations: [
       { type: 'Color', options: ['Black', 'White', 'Blue'], status: 'ACTIVE' }
     ]
   });
-  const [uploading, setUploading] = useState(false); // Track upload state
-  const [products, setProducts] = useState([]); // <-- use state for products
+  const [uploading, setUploading] = useState(false);
+  const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const dropdownRefs = useRef({});
 
   const fetchProducts = async () => {
     setLoadingProducts(true);
@@ -160,6 +166,101 @@ export default function ProductsPage() {
     }
   };
 
+  const handleEditProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`/api/product/${editProduct.id || editProduct._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: productForm.name,
+          description: productForm.description,
+          stock: Number(productForm.stockQuantity),
+          price: Number(productForm.price),
+          category: productForm.category,
+          image: productForm.image || '',
+          status: productForm.status ?? true,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        setShowEditProductModal(false);
+        setEditProduct(null);
+        // Reset form fields after save
+        setProductForm({
+          name: '',
+          description: '',
+          price: '',
+          stockQuantity: '',
+          category: '',
+          image: '',
+          variations: [
+            { type: 'Color', options: ['Black', 'White', 'Blue'], status: 'ACTIVE' }
+          ]
+        });
+        // Reload the table to show the updated product
+        fetchProducts();
+      } else {
+        alert('Failed to update product: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error updating product: ' + err.message);
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    try {
+      const res = await fetch(`/api/product/${productId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setProducts(prev => prev.filter(product => (product.id || product._id) !== productId));
+        setDeleteConfirm(null);
+      } else {
+        console.error('Failed to delete product');
+      }
+    } catch (err) {
+      console.error('Delete product error:', err);
+    }
+  };
+
+  const openEditModal = (product) => {
+    setEditProduct(product);
+    setProductForm({
+      name: product.name,
+      description: product.description || '',
+      price: product.price?.toString() || '',
+      stockQuantity: product.stock?.toString() || '',
+      category: product.category || '',
+      image: product.image || '',
+      variations: [
+        { type: 'Color', options: ['Black', 'White', 'Blue'], status: 'ACTIVE' }
+      ]
+    });
+    setShowEditProductModal(true);
+    setDropdownOpen(null);
+  };
+
+  const openDeleteConfirm = (productId) => {
+    setDeleteConfirm(productId);
+    setDropdownOpen(null);
+  };
+
+  const handleDropdownToggle = (productId, event) => {
+    if (dropdownOpen === productId) {
+      setDropdownOpen(null);
+    } else {
+      const button = event.currentTarget;
+      const rect = button.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.right - 192, // 192px is the dropdown width
+      });
+      setDropdownOpen(productId);
+    }
+  };
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.sku ? product.sku.toLowerCase().includes(searchTerm.toLowerCase()) : false);
@@ -168,6 +269,26 @@ export default function ProductsPage() {
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownOpen) {
+        const dropdownButton = dropdownRefs.current[dropdownOpen];
+        const isClickInsideDropdown = event.target.closest('[data-dropdown]');
+        const isClickOnButton = dropdownButton && dropdownButton.contains(event.target);
+        
+        if (!isClickInsideDropdown && !isClickOnButton) {
+          setDropdownOpen(null);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -284,7 +405,11 @@ export default function ProductsPage() {
                           </span>
                         </td>
                         <td className="py-4 px-6">
-                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150">
+                          <button 
+                            ref={(el) => dropdownRefs.current[product.id || product._id] = el}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150"
+                            onClick={(e) => handleDropdownToggle(product.id || product._id, e)}
+                          >
                             <MoreHorizontal size={16} className="text-gray-500" />
                           </button>
                         </td>
@@ -580,6 +705,251 @@ export default function ProductsPage() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {showEditProductModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar text-black">
+            {/* Modal Header */}
+            <div className="bg-slate-800 text-white p-6 rounded-t-2xl sticky top-0 z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Edit Product</h2>
+                  <p className="text-slate-300 mt-1">Update product information</p>
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handleEditProduct}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors duration-200"
+                  >
+                    Update
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowEditProductModal(false);
+                      setEditProduct(null);
+                    }}
+                    className="text-slate-300 hover:text-white p-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleEditProduct} className="p-6 space-y-8">
+              {/* General Information */}
+              <div className="bg-blue-50 p-6 rounded-xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm font-bold">
+                    ℹ
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">General Information</h3>
+                    <p className="text-sm text-gray-600">Basic product details and description</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Product Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={productForm.name}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter your product name here..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description <span className="text-gray-400">(Optional)</span>
+                    </label>
+                    <textarea
+                      value={productForm.description}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Describe your product features and benefits..."
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Media Assets */}
+              <div className="bg-green-50 p-6 rounded-xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-sm font-bold">
+                    📷
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Media Assets</h3>
+                    <p className="text-sm text-gray-600">Upload product images and videos</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                      <div className="text-4xl text-gray-400 mb-2">📷</div>
+                      <p className="text-sm text-gray-600 mb-1">Add Images</p>
+                      <p className="text-xs text-gray-400">PNG, JPG up to 10MB</p>
+                      {productForm.image && (
+                        <div className="mt-2 flex flex-col items-center">
+                          <img src={productForm.image} alt="Product Preview" className="h-24 rounded border mb-1" />
+                          <p className="text-xs text-gray-500">{productForm.image}</p>
+                        </div>
+                      )}
+                      {uploading && <p className="text-blue-600 text-sm mt-1">Uploading...</p>}
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="product-image-upload-edit"
+                    style={{ display: 'none' }}
+                    onChange={handleImageChange}
+                    disabled={uploading}
+                  />
+                  <button
+                    type="button"
+                    className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200"
+                    onClick={() => document.getElementById('product-image-upload-edit').click()}
+                    disabled={uploading}
+                  >
+                    Browse Files
+                  </button>
+                </div>
+              </div>
+
+              {/* Pricing & Inventory */}
+              <div className="bg-purple-50 p-6 rounded-xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-purple-600 text-white rounded-lg flex items-center justify-center text-sm font-bold">
+                    💰
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Pricing & Inventory</h3>
+                    <p className="text-sm text-gray-600">Set pricing and manage stock levels</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Price <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        value={productForm.price}
+                        onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+                        placeholder="0.00"
+                        step="0.01"
+                        className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity</label>
+                    <input
+                      type="number"
+                      value={productForm.stockQuantity}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, stockQuantity: e.target.value }))}
+                      placeholder="0"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <div className="relative">
+                      <select
+                        value={productForm.category}
+                        onChange={(e) => setProductForm(prev => ({ ...prev, category: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                      >
+                        <option value="">Select category</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Computers">Computers</option>
+                        <option value="Audio">Audio</option>
+                        <option value="Tablets">Tablets</option>
+                        <option value="Wearables">Wearables</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Dropdown Menu Portal */}
+      {dropdownOpen && (
+        <div 
+          data-dropdown
+          className="fixed w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200"
+          style={{
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            minWidth: '192px'
+          }}
+        >
+          <div className="py-1">
+            <button
+              onClick={() => openEditModal(products.find(product => (product.id || product._id) === dropdownOpen))}
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+            >
+              <Edit size={16} className="mr-2" />
+              Edit Product
+            </button>
+            <button
+              onClick={() => openDeleteConfirm(dropdownOpen)}
+              className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+            >
+              <Trash2 size={16} className="mr-2" />
+              Delete Product
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center p-4">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Product</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this product? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteProduct(deleteConfirm)}
+                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
