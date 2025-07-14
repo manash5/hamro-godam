@@ -21,6 +21,10 @@ const orderSchema = new mongoose.Schema({
     type: [Number],
     required: true,
   },
+  payment: {
+    type: String, 
+    required: true, 
+  }, 
   totalAmount: {
     type: Number,
     required: true,
@@ -33,6 +37,7 @@ const orderSchema = new mongoose.Schema({
   deliveryDate: {
     type: Date,
   },
+  
 }, { timestamps: true });
 
 export const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
