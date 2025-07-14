@@ -131,9 +131,11 @@ export default function OrdersPage() {
         setOrders(prev => [newOrder, ...prev]);
         setShowAddOrderModal(false);
       } else {
+        alert(`Failed to save order: ${result.error}`);
         console.error('Failed to save order:', result.error);
       }
     } catch (err) {
+      alert('Error saving order. Please try again.');
       console.error('Save order error:', err);
     }
   };
@@ -166,9 +168,11 @@ export default function OrdersPage() {
         setShowEditOrderModal(false);
         setEditOrder(null);
       } else {
+        alert(`Failed to update order: ${result.error}`);
         console.error('Failed to update order:', result.error);
       }
     } catch (err) {
+      alert('Error updating order. Please try again.');
       console.error('Update order error:', err);
     }
   };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Search, ChevronDown, X } from "lucide-react";
 
 export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }) {
   const [orderData, setOrderData] = useState({
@@ -8,8 +9,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
     customerNumber: "",
     customerAddress: "",
     email: "",
-    productName: [],
-    productQuantity: [],
+    products: [], // Changed to store product objects with id, name, price, stock
     totalAmount: 0,
     status: "pending",
     paymentMethod: "",
@@ -17,17 +17,69 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
     deliveryDate: "",
   });
 
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showProductDropdown, setShowProductDropdown] = useState(null);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+  // Fetch products from database
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('/api/product');
+        const data = await res.json();
+        if (res.ok && data.data) {
+          setProducts(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      }
+    };
+    
+    if (isOpen) {
+      fetchProducts();
+    }
+  }, [isOpen]);
+
+  // Filter products based on search term
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredProducts(products.filter(product => product.status));
+    } else {
+      setFilteredProducts(
+        products.filter(product => 
+          product.status && 
+          product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+  }, [searchTerm, products]);
+
   useEffect(() => {
     if (existingOrder) {
-      setOrderData(existingOrder);
+      // Convert existing order format to new format
+      const convertedProducts = existingOrder.productName.map((name, index) => {
+        const product = products.find(p => p.name === name);
+        return {
+          id: product?._id || product?.id || "",
+          name: name,
+          price: product?.price || 0,
+          stock: product?.stock || 0,
+          quantity: existingOrder.productQuantity[index] || 1
+        };
+      });
+      
+      setOrderData({
+        ...existingOrder,
+        products: convertedProducts
+      });
     } else {
       setOrderData({
         customerName: "",
         customerNumber: "",
         customerAddress: "",
         email: "",
-        productName: [],
-        productQuantity: [],
+        products: [],
         totalAmount: 0,
         status: "pending",
         paymentMethod: "",
@@ -35,7 +87,27 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
         deliveryDate: "",
       });
     }
-  }, [existingOrder]);
+  }, [existingOrder, products]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showProductDropdown !== null) {
+        const isClickInsideDropdown = event.target.closest('[data-product-dropdown]');
+        const isClickOnInput = event.target.closest('[data-product-input]');
+        
+        if (!isClickInsideDropdown && !isClickOnInput) {
+          setShowProductDropdown(null);
+          setSearchTerm("");
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProductDropdown]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,43 +115,68 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
   };
 
   const handleProductChange = (index, field, value) => {
-    const names = [...orderData.productName];
-    const quantities = [...orderData.productQuantity];
-
-    if (field === "name") names[index] = value;
-    else quantities[index] = parseInt(value) || 0;
-
+    const updatedProducts = [...orderData.products];
+    
+    if (field === "quantity") {
+      updatedProducts[index].quantity = parseInt(value) || 0;
+    }
+    
     setOrderData((prev) => ({
       ...prev,
-      productName: names,
-      productQuantity: quantities,
+      products: updatedProducts,
     }));
   };
 
   const addProduct = () => {
     setOrderData((prev) => ({
       ...prev,
-      productName: [...prev.productName, ""],
-      productQuantity: [...prev.productQuantity, 1],
+      products: [...prev.products, { id: "", name: "", price: 0, stock: 0, quantity: 1 }],
     }));
   };
 
   const removeProduct = (index) => {
-    const names = [...orderData.productName];
-    const quantities = [...orderData.productQuantity];
-    names.splice(index, 1);
-    quantities.splice(index, 1);
-
+    const updatedProducts = [...orderData.products];
+    updatedProducts.splice(index, 1);
     setOrderData((prev) => ({
       ...prev,
-      productName: names,
-      productQuantity: quantities,
+      products: updatedProducts,
     }));
   };
 
+  const selectProduct = (product, index) => {
+    const updatedProducts = [...orderData.products];
+    updatedProducts[index] = {
+      id: product._id || product.id,
+      name: product.name,
+      price: product.price,
+      stock: product.stock,
+      quantity: 1
+    };
+    
+    setOrderData((prev) => ({
+      ...prev,
+      products: updatedProducts,
+    }));
+    setShowProductDropdown(null);
+    setSearchTerm("");
+  };
+
+  const calculateTotal = () => {
+    return orderData.products.reduce((sum, product) => {
+      return sum + (product.price * product.quantity);
+    }, 0);
+  };
+
   const handleSubmit = () => {
-    const totalAmount = orderData.productQuantity.reduce((sum, qty) => sum + qty * 500, 0);
-    onSave({ ...orderData, totalAmount });
+    const totalAmount = calculateTotal();
+    const orderPayload = {
+      ...orderData,
+      totalAmount,
+      productName: orderData.products.map(p => p.name),
+      productQuantity: orderData.products.map(p => p.quantity),
+      productIds: orderData.products.map(p => p.id), // Add product IDs for stock update
+    };
+    onSave(orderPayload);
   };
 
   if (!isOpen) return null;
@@ -143,33 +240,79 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
                 {/* Product Items */}
                 <div className="space-y-4 mb-6">
                   <h4 className="font-medium text-gray-700">Product Items</h4>
-                  {orderData.productName.map((product, index) => (
+                  {orderData.products.map((product, index) => (
                     <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
                       <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          value={product}
-                          onChange={(e) => handleProductChange(index, "name", e.target.value)}
-                          placeholder="Product Name"
-                          className="w-full border-none outline-none font-medium"
-                        />
+                      <div className="flex-1 relative">
+                        <div className="relative" data-product-input>
+                          <input
+                            type="text"
+                            value={product.name}
+                            placeholder="Search and select product..."
+                            className="w-full border-none outline-none font-medium pr-8"
+                            readOnly
+                            onClick={() => setShowProductDropdown(index)}
+                          />
+                          <button
+                            onClick={() => setShowProductDropdown(showProductDropdown === index ? null : index)}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                          >
+                            <ChevronDown size={16} className="text-gray-400" />
+                          </button>
+                        </div>
+                        
+                        {/* Product Dropdown */}
+                        {showProductDropdown === index && (
+                          <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto" data-product-dropdown>
+                            <div className="p-2 border-b">
+                              <div className="relative">
+                                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                                <input
+                                  type="text"
+                                  placeholder="Search products..."
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                  className="w-full pl-8 pr-2 py-2 border border-gray-300 rounded text-sm"
+                                  autoFocus
+                                />
+                              </div>
+                            </div>
+                            <div className="py-1">
+                              {filteredProducts.length > 0 ? (
+                                filteredProducts.map((prod) => (
+                                  <button
+                                    key={prod._id || prod.id}
+                                    onClick={() => selectProduct(prod, index)}
+                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm flex justify-between items-center"
+                                  >
+                                    <span>{prod.name}</span>
+                                    <span className="text-gray-500">${prod.price} (Stock: {prod.stock})</span>
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-3 py-2 text-gray-500 text-sm">No products found</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
-                          value={orderData.productQuantity[index]}
+                          min="1"
+                          max={product.stock}
+                          value={product.quantity}
                           onChange={(e) => handleProductChange(index, "quantity", e.target.value)}
                           className="w-16 text-center border border-gray-300 rounded px-2 py-1"
                         />
                         <span className="text-gray-500">×</span>
-                        <span className="font-medium">$500</span>
+                        <span className="font-medium">${product.price || 0}</span>
                       </div>
                       <button 
                         onClick={() => removeProduct(index)} 
                         className="text-red-500 hover:text-red-700 ml-2"
                       >
-                        ×
+                        <X size={16} />
                       </button>
                     </div>
                   ))}
@@ -186,7 +329,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold">Total Amount</span>
                     <span className="text-2xl font-bold text-gray-900">
-                      ${orderData.productQuantity.reduce((sum, qty) => sum + qty * 500, 0).toLocaleString()}
+                      ${calculateTotal().toLocaleString()}
                     </span>
                   </div>
                 </div>
