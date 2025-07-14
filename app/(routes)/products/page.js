@@ -124,11 +124,33 @@ export default function ProductsPage() {
     }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Product form data:', productForm);
-    setShowAddProductModal(false);
+    try {
+      const res = await fetch('/api/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: productForm.name,
+          description: productForm.description,
+          stock: Number(productForm.stockQuantity),
+          price: Number(productForm.price),
+          category: productForm.category,
+          // Add image and status if you have them in your form
+          // image: productForm.image,
+          // status: productForm.status,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        // Optionally update your UI here
+        setShowAddProductModal(false);
+      } else {
+        alert('Failed to save product: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error saving product: ' + err.message);
+    }
   };
 
   const filteredProducts = products.filter(product => {
@@ -217,7 +239,6 @@ export default function ProductsPage() {
                     <th className="text-left py-4 px-6 font-semibold text-gray-700 text-sm">Price</th>
                     <th className="text-left py-4 px-6 font-semibold text-gray-700 text-sm">Stock</th>
                     <th className="text-left py-4 px-6 font-semibold text-gray-700 text-sm">Status</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-700 text-sm">Sales</th>
                     <th className="text-left py-4 px-6 font-semibold text-gray-700 text-sm">Action</th>
                   </tr>
                 </thead>
@@ -246,12 +267,7 @@ export default function ProductsPage() {
                           {product.status}
                         </span>
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="text-sm font-semibold text-gray-900">{product.sales.toLocaleString()}</div>
-                        <div className={`text-xs font-medium ${getSalesChangeColor(product.salesChange)}`}>
-                          {product.salesChange}
-                        </div>
-                      </td>
+                      
                       <td className="py-4 px-6">
                         <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150">
                           <MoreHorizontal size={16} className="text-gray-500" />
