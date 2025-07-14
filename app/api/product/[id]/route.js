@@ -40,6 +40,8 @@ export async function PATCH(request, { params }) {
     product.stock = body.stock ?? product.stock;
     product.price = body.price ?? product.price;
     product.category = body.category ?? product.category;
+    product.image = body.image ?? product.image; // Add image update
+    product.status = body.status ?? product.status; // Add status update
 
     await product.save();
 

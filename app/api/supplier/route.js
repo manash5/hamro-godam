@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { Supplier } from '@/models/supplier/supplier';
 
+export async function GET() {
+  try {
+    await connectToDB();
+    const suppliers = await Order.find().sort({ createdAt: -1 });
+    return NextResponse.json({ data:suppliers }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to supplier' }, { status: 500 });
+  }
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();

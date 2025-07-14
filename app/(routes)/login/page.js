@@ -25,6 +25,8 @@ const page = () => {
         body: JSON.stringify({ email: data.email, password: data.password }),
       });
       const result = await res.json();
+      console.log(result?.token);
+      localStorage.setItem("token", result?.token);
 
       if (!result.exists) {
         setLoginError('Account does not exist or password is incorrect.');
