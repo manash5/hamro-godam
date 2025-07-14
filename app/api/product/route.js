@@ -14,6 +14,8 @@ export async function POST(request) {
       stock: body.stock,
         price: body.price,
         category: body.category,
+      image: body.image, // Add image
+      status: body.status, // Add status
       // add other fields as needed
     });
 
@@ -25,5 +27,22 @@ export async function POST(request) {
     );
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+  }
+}
+
+// GET all products
+export async function GET() {
+  try {
+    await connectToDB();
+    const products = await Product.find({}).sort({ createdAt: -1 });
+    return NextResponse.json({ 
+      data: products, 
+      message: "Successfully fetched products" 
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch products' },
+      { status: 500 }
+    );
   }
 }

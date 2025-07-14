@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, MoreHorizontal, Package2 } from 'lucide-react';
 
 import Sidebar from '../../../components/sidebar'
@@ -22,69 +22,37 @@ export default function ProductsPage() {
     ]
   });
   const [uploading, setUploading] = useState(false); // Track upload state
-  
-  const products = [
-    {
-      id: 1,
-      name: 'iPhone 14 Pro',
-      sku: 'IPH14PRO001',
-      category: 'Electronics',
-      price: 999.00,
-      stock: 156,
-      status: 'ACTIVE',
-      sales: 2847,
-      salesChange: '+12%',
-      image: '📱'
-    },
-    {
-      id: 2,
-      name: 'MacBook Air M2',
-      sku: 'MBA13M2001',
-      category: 'Computers',
-      price: 1299.00,
-      stock: 89,
-      status: 'ACTIVE',
-      sales: 1234,
-      salesChange: '+8%',
-      image: '💻'
-    },
-    {
-      id: 3,
-      name: 'AirPods Pro 2',
-      sku: 'APP2GEN001',
-      category: 'Audio',
-      price: 249.00,
-      stock: 12,
-      status: 'LOW STOCK',
-      sales: 3891,
-      salesChange: '+25%',
-      image: '🎧'
-    },
-    {
-      id: 4,
-      name: 'iPad Pro 12.9"',
-      sku: 'IPADPRO129',
-      category: 'Tablets',
-      price: 1099.00,
-      stock: 0,
-      status: 'OUT OF STOCK',
-      sales: 567,
-      salesChange: '-5%',
-      image: '📱'
-    },
-    {
-      id: 5,
-      name: 'Apple Watch Series 9',
-      sku: 'AWSERIES9001',
-      category: 'Wearables',
-      price: 399.00,
-      stock: 234,
-      status: 'ACTIVE',
-      sales: 1789,
-      salesChange: '+18%',
-      image: '⌚'
+  const [products, setProducts] = useState([]); // <-- use state for products
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const res = await fetch('/api/product');
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setProducts(data.data);
+      } else {
+        setProducts([]);
+      }
+    } catch (err) {
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    // Initial fetch only
+    fetchProducts();
+  }, []);
+
+  // Function to determine status based on stock level
+  const getProductStatus = (stock) => {
+    if (stock === 0) return 'OUT OF STOCK';
+    if (stock < 5) return 'LOW STOCK';
+    return 'ACTIVE';
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -132,9 +100,9 @@ export default function ProductsPage() {
     if (!file) return;
     setUploading(true);
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image', file); // <-- field name must be 'image' for upload/route.js
     try {
-      const res = await fetch('/api/upload', {
+      const res = await fetch('/api/upload', { // <-- use /api/upload
         method: 'POST',
         body: formData,
       });
@@ -163,13 +131,27 @@ export default function ProductsPage() {
           stock: Number(productForm.stockQuantity),
           price: Number(productForm.price),
           category: productForm.category,
-          image: productForm.image, // Include image path
-          // status: productForm.status, // Add if you have status in your form
+          image: productForm.image || '', // Ensure image is sent
+          status: productForm.status ?? true, // Default to available if not set
         }),
       });
       const result = await res.json();
       if (res.ok) {
         setShowAddProductModal(false);
+        // Reset form fields after save
+        setProductForm({
+          name: '',
+          description: '',
+          price: '',
+          stockQuantity: '',
+          category: '',
+          image: '',
+          variations: [
+            { type: 'Color', options: ['Black', 'White', 'Blue'], status: 'ACTIVE' }
+          ]
+        });
+        // Reload the table to show the new product
+        fetchProducts();
       } else {
         alert('Failed to save product: ' + result.error);
       }
@@ -180,9 +162,9 @@ export default function ProductsPage() {
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+                         (product.sku ? product.sku.toLowerCase().includes(searchTerm.toLowerCase()) : false);
     const matchesCategory = selectedCategory === 'All Categories' || product.category === selectedCategory;
-    const matchesStatus = selectedStatus === 'All Status' || product.status === selectedStatus;
+    const matchesStatus = selectedStatus === 'All Status' || getProductStatus(product.stock) === selectedStatus;
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
@@ -268,38 +250,47 @@ export default function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {filteredProducts.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
-                      <td className="py-4 px-6">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg">
-                            {product.image}
+                  {loadingProducts ? (
+                    <tr><td colSpan="7" className="text-center py-8 text-gray-500">Loading products...</td></tr>
+                  ) : filteredProducts.length === 0 ? (
+                    <tr><td colSpan="7" className="text-center py-8 text-gray-500">No products found.</td></tr>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <tr key={product.id || product._id} className="hover:bg-gray-50 transition-colors duration-150">
+                        <td className="py-4 px-6">
+                          <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg">
+                              {product.image ? (
+                                <img src={product.image} alt={product.name} className="h-8 w-8 object-cover rounded" />
+                              ) : (
+                                <span>📦</span>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-900 text-sm">{product.name}</div>
+                              <div className="text-xs text-gray-500">SKU: {product.sku || '-'}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-semibold text-gray-900 text-sm">{product.name}</div>
-                            <div className="text-xs text-gray-500">SKU: {product.sku}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-sm text-gray-700">{product.category}</td>
-                      <td className="py-4 px-6 text-sm font-semibold text-gray-900">${product.price.toFixed(2)}</td>
-                      <td className="py-4 px-6 text-sm text-gray-700">{product.stock}</td>
-                      <td className="py-4 px-6">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
-                          {product.status}
-                        </span>
-                      </td>
-                      
-                      <td className="py-4 px-6">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150">
-                          <MoreHorizontal size={16} className="text-gray-500" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="py-4 px-6 text-sm text-gray-700">{product.category}</td>
+                        <td className="py-4 px-6 text-sm font-semibold text-gray-900">${product.price?.toFixed ? product.price.toFixed(2) : product.price}</td>
+                        <td className="py-4 px-6 text-sm text-gray-700">{product.stock}</td>
+                        <td className="py-4 px-6">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(getProductStatus(product.stock))}`}>
+                            {getProductStatus(product.stock)}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150">
+                            <MoreHorizontal size={16} className="text-gray-500" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
