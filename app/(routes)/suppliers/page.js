@@ -18,7 +18,10 @@ export default function SupplierPage() {
   }, []);
 
   const fetchSuppliers = async () => {
-    const res = await fetch("/api/supplier");
+    const token = localStorage.getItem('token');
+    const res = await fetch("/api/supplier", {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+    });
     const data = await res.json();
     if (res.ok && data.data) {
       setSuppliers(data.data);
@@ -43,13 +46,15 @@ export default function SupplierPage() {
   const handleSave = async (data) => {
     const method = editingSupplier ? "PUT" : "POST";
     const endpoint = editingSupplier ? `/api/supplier/${editingSupplier._id}` : "/api/supplier";
-
+    const token = localStorage.getItem('token');
     const res = await fetch(endpoint, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(data),
     });
-
     const result = await res.json();
     if (res.ok) {
       fetchSuppliers();

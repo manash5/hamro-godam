@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { Product } from '@/models/product/product';
+import { verifyToken } from '@/utils/auth';
 
 // POST create new product
 export async function POST(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     const body = await request.json();
     await connectToDB();
@@ -31,7 +36,11 @@ export async function POST(request) {
 }
 
 // GET all products
-export async function GET() {
+export async function GET(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     await connectToDB();
     const products = await Product.find({}).sort({ createdAt: -1 });

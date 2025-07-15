@@ -38,9 +38,13 @@ const page = () => {
       const userId = result.id;
 
       // 2. Call /api/send to send email
+      const token = result?.token;
       await fetch('/api/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ email: data.email }),
       });
 

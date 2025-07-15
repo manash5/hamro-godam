@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { Employee } from '@/models/employee/employee';
+import { verifyToken } from '@/utils/auth';
 
 // POST create new employee
 export async function POST(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     const body = await request.json();
     await connectToDB();

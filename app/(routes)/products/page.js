@@ -34,7 +34,10 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      const res = await fetch('/api/product');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/product', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
       const data = await res.json();
       if (res.ok && data.data) {
         setProducts(data.data);
@@ -108,9 +111,11 @@ export default function ProductsPage() {
     const formData = new FormData();
     formData.append('image', file); // <-- field name must be 'image' for upload/route.js
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/upload', { // <-- use /api/upload
         method: 'POST',
         body: formData,
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       const data = await res.json();
       if (res.ok && data.path) {
@@ -128,9 +133,13 @@ export default function ProductsPage() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/product', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           name: productForm.name,
           description: productForm.description,
@@ -169,9 +178,13 @@ export default function ProductsPage() {
   const handleEditProduct = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/product/${editProduct.id || editProduct._id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           name: productForm.name,
           description: productForm.description,
@@ -210,8 +223,10 @@ export default function ProductsPage() {
 
   const handleDeleteProduct = async (productId) => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/product/${productId}`, {
         method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
 
       if (res.ok) {
