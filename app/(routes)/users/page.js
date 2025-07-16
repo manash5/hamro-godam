@@ -1,303 +1,260 @@
-"use client"
+'use client';
 
-import React, { useState, useMemo } from 'react';
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  createColumnHelper,
-  flexRender,
+import React, { useState } from 'react';
+import { Eye, EyeOff, Edit, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import Sidebar from '@/components/sidebar';
 
-  
-} from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import Sidebar from '../../../components/sidebar';
+const UserTable = () => {
+  const [visibleSalaries, setVisibleSalaries] = useState({});
+  const [roleFilter, setRoleFilter] = useState('All Roles');
+  const [statusFilter, setStatusFilter] = useState('All Status');
 
-const App = () => {
-  const [users] = useState([
+  const users = [
     {
       id: 'USR001',
       name: 'John Doe',
-      role: 'Administrator',
-      email: 'john.doe@company.com',
-      status: 'ACTIVE',
-      lastLogin: '2 hours ago',
       initials: 'JD',
+      role: 'Administrator',
+      email: 'john.do@company.com',
+      status: 'ACTIVE',
+      salary: 85000,
       bgColor: 'bg-blue-100',
-      textColor: 'text-blue-700'
+      textColor: 'text-blue-600'
     },
     {
       id: 'USR002',
       name: 'Sarah Miller',
+      initials: 'SM',
       role: 'Manager',
       email: 'sarah.miller@company.com',
       status: 'ACTIVE',
-      lastLogin: '1 day ago',
-      initials: 'SM',
+      salary: 72000,
       bgColor: 'bg-yellow-100',
-      textColor: 'text-yellow-700'
+      textColor: 'text-yellow-600'
     },
     {
       id: 'USR003',
       name: 'Mike Johnson',
+      initials: 'MJ',
       role: 'Employee',
       email: 'mike.johnson@company.com',
       status: 'INACTIVE',
-      lastLogin: '1 week ago',
-      initials: 'MJ',
+      salary: 58000,
       bgColor: 'bg-pink-100',
-      textColor: 'text-pink-700'
+      textColor: 'text-pink-600'
     },
     {
       id: 'USR004',
       name: 'Emma Brown',
+      initials: 'EB',
       role: 'Employee',
       email: 'emma.brown@company.com',
       status: 'ACTIVE',
-      lastLogin: '3 hours ago',
-      initials: 'EB',
-      bgColor: 'bg-indigo-100',
-      textColor: 'text-indigo-700'
+      salary: 62000,
+      bgColor: 'bg-blue-100',
+      textColor: 'text-blue-600'
     },
     {
       id: 'USR005',
       name: 'Robert Wilson',
+      initials: 'RW',
       role: 'Manager',
       email: 'robert.wilson@company.com',
       status: 'PENDING',
-      lastLogin: 'Never',
-      initials: 'RW',
+      salary: 75000,
       bgColor: 'bg-green-100',
-      textColor: 'text-green-700'
+      textColor: 'text-green-600'
     }
-  ]);
+  ];
 
-  const [sorting, setSorting] = useState([]);
-  const [globalFilter, setGlobalFilter] = useState('');
-  const [selectedRole, setSelectedRole] = useState('All Roles');
-  const [selectedStatus, setSelectedStatus] = useState('All Status');
-
-  // Column helper for type safety and better DX
-  const columnHelper = createColumnHelper();
+  const toggleSalaryVisibility = (userId) => {
+    setVisibleSalaries(prev => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }));
+  };
 
   const getStatusBadge = (status) => {
     const statusStyles = {
-      ACTIVE: 'bg-green-100 text-green-800 border-green-200',
-      INACTIVE: 'bg-red-100 text-red-800 border-red-200',
-      PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      'ACTIVE': 'bg-green-100 text-green-700 border-green-200',
+      'INACTIVE': 'bg-red-100 text-red-700 border-red-200',
+      'PENDING': 'bg-yellow-100 text-yellow-700 border-yellow-200'
     };
-
+    
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusStyles[status]}`}>
+      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusStyles[status]}`}>
         {status}
       </span>
     );
   };
 
-  // Define columns using TanStack Table's column helper
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('name', {
-        header: 'User',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <div className="flex items-center py-2">
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full ${row.bgColor} flex items-center justify-center`}>
-                <span className={`text-sm font-medium ${row.textColor}`}>
-                  {row.initials}
-                </span>
-              </div>
-              <div className="ml-4">
-                <div className="text-sm font-medium text-gray-900">
-                  {row.name}
-                </div>
-                <div className="text-sm text-gray-500">
-                  ID: {row.id}
-                </div>
-              </div>
-            </div>
-          );
-        },
-        enableSorting: true,
-      }),
-      columnHelper.accessor('role', {
-        header: 'Role',
-        cell: (info) => (
-          <div className="text-sm text-gray-900">{info.getValue()}</div>
-        ),
-        enableSorting: true,
-      }),
-      columnHelper.accessor('email', {
-        header: 'Email',
-        cell: (info) => (
-          <div className="text-sm text-gray-900">{info.getValue()}</div>
-        ),
-        enableSorting: true,
-      }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: (info) => getStatusBadge(info.getValue()),
-        enableSorting: true,
-      }),
-      columnHelper.accessor('lastLogin', {
-        header: 'Last Login',
-        cell: (info) => (
-          <div className="text-sm text-gray-900">{info.getValue()}</div>
-        ),
-        enableSorting: true,
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Action',
-        cell: () => (
-          <button className="text-gray-400 hover:text-gray-600 p-1">
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        ),
-      }),
-    ],
-    []
-  );
+  const formatSalary = (salary) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0
+    }).format(salary);
+  };
 
-  // Initialize the table instance
-  const table = useReactTable({
-    data: users,
-    columns,
-    state: {
-      sorting,
-      globalFilter,
-    },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 5,
-      },
-    },
-  });
+  const handleEdit = (userId) => {
+    // Handle edit functionality
+    console.log('Edit user:', userId);
+  };
 
-  const FilterDropdown = ({ title }) => (
-    <div className="relative">
-      <button className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
-        {title}
-        <ChevronDown className="w-4 h-4 ml-2" />
-      </button>
-    </div>
-  );
+  const handleDelete = (userId) => {
+    // Handle delete functionality
+    console.log('Delete user:', userId);
+  };
+
+  const handleAddUser = () => {
+    // Handle add user functionality
+    console.log('Add new user');
+  };
 
   return (
-    <div className="flex bg-slate-100 min-h-screen">
-        <Sidebar />
-      <div className="min-w-7xl px-10 mx-5 bg-slate-100 my-10 rounded-xl">
+    <div className="bg-slate-100 min-h-screen flex">
+      <Sidebar/>
+      <div className="min-w-6xl mx-auto mt-20">
         {/* Header */}
-        <div className="my-6 ">
-          <h1 className="text-4xl font-bold text-gray-900 px-10">Employees</h1>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+            <p className="text-gray-600 mt-1">Manage your users and their access</p>
+          </div>
+          <button 
+            onClick={handleAddUser}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Plus size={16} />
+            Add User
+          </button>
         </div>
 
-        <div className="p-5 px-10 rounded-xl bg-slate-100">
         {/* Filters */}
-          <div className="flex gap-4 mb-6 bg-slate-100">
-            <FilterDropdown title={selectedRole} />
-            <FilterDropdown title={selectedStatus} />
+        <div className="flex gap-4 mb-6">
+          <select 
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="All Roles">All Roles</option>
+            <option value="Administrator">Administrator</option>
+            <option value="Manager">Manager</option>
+            <option value="Employee">Employee</option>
+          </select>
+          
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="All Status">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="PENDING">Pending</option>
+          </select>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  User
+                </th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Salary
+                </th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full ${user.bgColor} flex items-center justify-center`}>
+                        <span className={`text-sm font-medium ${user.textColor}`}>
+                          {user.initials}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm text-gray-500">ID: {user.id}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="text-sm text-gray-900">{user.role}</span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="text-sm text-gray-900">{user.email}</span>
+                  </td>
+                  <td className="py-4 px-6">
+                    {getStatusBadge(user.status)}
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-900">
+                        {visibleSalaries[user.id] ? formatSalary(user.salary) : '••••••'}
+                      </span>
+                      <button
+                        onClick={() => toggleSalaryVisibility(user.id)}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {visibleSalaries[user.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleEdit(user.id)}
+                        className="text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(user.id)}
+                        className="text-red-600 hover:text-red-800 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-700">
+            Showing 1 to 5 of 5 users
           </div>
-
-          {/* Table Container */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  {table.getHeaderGroups().map(headerGroup => (
-                    <tr key={headerGroup.id}>
-                      {headerGroup.headers.map(header => (
-                        <th
-                          key={header.id}
-                          className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          <div className="flex items-center gap-2">
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            {header.column.getCanSort() && (
-                              <span className="text-gray-400">
-                                {header.column.getIsSorted() === 'desc' ? (
-                                  <ChevronDown className="w-4 h-4" />
-                                ) : header.column.getIsSorted() === 'asc' ? (
-                                  <ChevronUp className="w-4 h-4" />
-                                ) : (
-                                  <div className="w-4 h-4" />
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {table.getRowModel().rows.map(row => (
-                    <tr key={row.id} className="hover:bg-gray-50">
-                      {row.getVisibleCells().map(cell => (
-                        <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
-                {Math.min(
-                  (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                  table.getFilteredRowModel().rows.length
-                )}{' '}
-                of {table.getFilteredRowModel().rows.length} users
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                  className="px-3 py-1 text-sm font-medium rounded-md bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                
-                {/* Page Numbers */}
-                {Array.from({ length: table.getPageCount() }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => table.setPageIndex(i)}
-                    className={`px-3 py-1 text-sm font-medium rounded-md ${
-                      table.getState().pagination.pageIndex === i
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                
-                <button
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                  className="px-3 py-1 text-sm font-medium rounded-md bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+          <div className="flex items-center gap-2">
+            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              <ChevronLeft size={16} />
+            </button>
+            <button className="px-3 py-1 bg-blue-600 text-white rounded">
+              1
+            </button>
+            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              <ChevronRight size={16} />
+            </button>
           </div>
         </div>
       </div>
@@ -305,4 +262,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default UserTable;
