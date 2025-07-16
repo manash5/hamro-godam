@@ -19,7 +19,7 @@ function Logo() {
           strokeLinejoin="round" 
           className="w-5 h-5 text-white"
           initial={{ rotateY: 0 }}
-          animate={{ rotateY: 360 }}
+          animate={{ rotateY: 36 }}
           transition={{ duration: 2, repeat: Infinity, repeatType: "loop", repeatDelay: 5 }}
         >
           <rect width="16" height="16" x="4" y="4" rx="2" />
