@@ -18,7 +18,12 @@ const UserTable = () => {
     const fetchEmployees = async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/employee');
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/employee', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
         const data = await res.json();
         if (res.ok) {
           setEmployees(data.data || []);
@@ -75,7 +80,7 @@ const UserTable = () => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
       const res = await fetch(`/api/employee/${userId}`, { method: 'DELETE' });
-      if (res.ok) {
+      if (res) {
         setEmployees(prev => prev.filter(u => u.id !== userId));
       } else {
         alert('Failed to delete user');
@@ -94,19 +99,25 @@ const UserTable = () => {
     try {
       let res, data;
       const token = localStorage.getItem('token');
+      // Map phone to contact_number for backend compatibility
+      const payload = {
+        ...userData,
+        contact_number: userData.phone,
+      };
+      delete payload.phone;
       if (selectedUser) {
         // Edit user
         res = await fetch(`/api/employee/${selectedUser.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-          body: JSON.stringify(userData),
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(payload),
         });
       } else {
         // Add user
         res = await fetch('/api/employee', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify(userData),
+          body: JSON.stringify(payload),
         });
       }
       data = await res.json();
