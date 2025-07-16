@@ -12,7 +12,6 @@ export default function ProductsPage() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
-  // 1. Add state for suppliers and new supplier form
   const [suppliers, setSuppliers] = useState([]);
   const [supplierLoading, setSupplierLoading] = useState(false);
   const [showNewSupplierForm, setShowNewSupplierForm] = useState(false);
@@ -32,7 +31,7 @@ export default function ProductsPage() {
     stockQuantity: '',
     category: '',
     image: '',
-    supplier: '', // <-- single supplier
+    supplier: '', 
     variations: [
       { type: 'Color', options: ['Black', 'White', 'Blue'], status: 'ACTIVE' }
     ]

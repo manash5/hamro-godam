@@ -17,11 +17,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true, 
-  },
-  salary: {
-    type: Number,
-    default: 0,  
-    required: true,  
   }
 }, {
   timestamps: true, 

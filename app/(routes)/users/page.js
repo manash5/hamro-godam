@@ -1,71 +1,40 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Edit, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
+import AddEditUser from '@/components/user/AddEditUser';
 
 const UserTable = () => {
+  const [employees, setEmployees] = useState([]);
   const [visibleSalaries, setVisibleSalaries] = useState({});
   const [roleFilter, setRoleFilter] = useState('All Roles');
   const [statusFilter, setStatusFilter] = useState('All Status');
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  const users = [
-    {
-      id: 'USR001',
-      name: 'John Doe',
-      initials: 'JD',
-      role: 'Administrator',
-      email: 'john.do@company.com',
-      status: 'ACTIVE',
-      salary: 85000,
-      bgColor: 'bg-blue-100',
-      textColor: 'text-blue-600'
-    },
-    {
-      id: 'USR002',
-      name: 'Sarah Miller',
-      initials: 'SM',
-      role: 'Manager',
-      email: 'sarah.miller@company.com',
-      status: 'ACTIVE',
-      salary: 72000,
-      bgColor: 'bg-yellow-100',
-      textColor: 'text-yellow-600'
-    },
-    {
-      id: 'USR003',
-      name: 'Mike Johnson',
-      initials: 'MJ',
-      role: 'Employee',
-      email: 'mike.johnson@company.com',
-      status: 'INACTIVE',
-      salary: 58000,
-      bgColor: 'bg-pink-100',
-      textColor: 'text-pink-600'
-    },
-    {
-      id: 'USR004',
-      name: 'Emma Brown',
-      initials: 'EB',
-      role: 'Employee',
-      email: 'emma.brown@company.com',
-      status: 'ACTIVE',
-      salary: 62000,
-      bgColor: 'bg-blue-100',
-      textColor: 'text-blue-600'
-    },
-    {
-      id: 'USR005',
-      name: 'Robert Wilson',
-      initials: 'RW',
-      role: 'Manager',
-      email: 'robert.wilson@company.com',
-      status: 'PENDING',
-      salary: 75000,
-      bgColor: 'bg-green-100',
-      textColor: 'text-green-600'
-    }
-  ];
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/employee');
+        const data = await res.json();
+        if (res.ok) {
+          setEmployees(data.data || []);
+        } else {
+          setEmployees([]);
+        }
+      } catch (error) {
+        setEmployees([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEmployees();
+    // Expose fetchEmployees for refresh after add/edit
+    UserTable.fetchEmployees = fetchEmployees;
+  }, []);
 
   const toggleSalaryVisibility = (userId) => {
     setVisibleSalaries(prev => ({
@@ -80,10 +49,10 @@ const UserTable = () => {
       'INACTIVE': 'bg-red-100 text-red-700 border-red-200',
       'PENDING': 'bg-yellow-100 text-yellow-700 border-yellow-200'
     };
-    
+    const displayStatus = status || 'ACTIVE';
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusStyles[status]}`}>
-        {status}
+      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusStyles[displayStatus] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+        {displayStatus}
       </span>
     );
   };
@@ -97,24 +66,79 @@ const UserTable = () => {
   };
 
   const handleEdit = (userId) => {
-    // Handle edit functionality
-    console.log('Edit user:', userId);
+    const user = employees.find(u => u.id === userId);
+    setSelectedUser(user);
+    setModalOpen(true);
   };
 
-  const handleDelete = (userId) => {
-    // Handle delete functionality
-    console.log('Delete user:', userId);
+  const handleDelete = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    try {
+      const res = await fetch(`/api/employee/${userId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setEmployees(prev => prev.filter(u => u.id !== userId));
+      } else {
+        alert('Failed to delete user');
+      }
+    } catch (error) {
+      alert('Failed to delete user');
+    }
   };
 
   const handleAddUser = () => {
-    // Handle add user functionality
-    console.log('Add new user');
+    setSelectedUser(null);
+    setModalOpen(true);
+  };
+
+  const handleSaveUser = async (userData) => {
+    try {
+      let res, data;
+      const token = localStorage.getItem('token');
+      if (selectedUser) {
+        // Edit user
+        res = await fetch(`/api/employee/${selectedUser.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+          body: JSON.stringify(userData),
+        });
+      } else {
+        // Add user
+        res = await fetch('/api/employee', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(userData),
+        });
+      }
+      data = await res.json();
+      if (res) {
+        // Refresh list
+        const fetchEmployees = UserTable.fetchEmployees || (()=>{});
+        await fetchEmployees();
+        setModalOpen(false);
+      } else {
+        alert(data.message || data.error || 'Failed to save user');
+      }
+    } catch (error) {
+      alert('Failed to save user');
+    }
+  };
+
+  const handleCancel = () => {
+    setModalOpen(false);
+    setSelectedUser(null);
   };
 
   return (
     <div className="bg-slate-100 min-h-screen flex">
       <Sidebar/>
       <div className="min-w-6xl mx-auto mt-20">
+        {/* Add/Edit User Modal */}
+        <AddEditUser
+          user={selectedUser}
+          isOpen={modalOpen}
+          onSave={handleSaveUser}
+          onCancel={handleCancel}
+        />
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -143,16 +167,7 @@ const UserTable = () => {
             <option value="Employee">Employee</option>
           </select>
           
-          <select 
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="All Status">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="PENDING">Pending</option>
-          </select>
+          
         </div>
 
         {/* Table */}
@@ -181,61 +196,67 @@ const UserTable = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full ${user.bgColor} flex items-center justify-center`}>
-                        <span className={`text-sm font-medium ${user.textColor}`}>
-                          {user.initials}
+              {loading ? (
+                <tr><td colSpan={6} className="text-center py-8 text-gray-500">Loading...</td></tr>
+              ) : employees.length === 0 ? (
+                <tr><td colSpan={6} className="text-center py-8 text-gray-500">No users found.</td></tr>
+              ) : (
+                employees.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center`}>
+                          <span className={`text-sm font-medium text-blue-600`}>
+                            {user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : '?'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                          <div className="text-sm text-gray-500">ID: {user.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="text-sm text-gray-900">{user.role || 'Employee'}</span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="text-sm text-gray-900">{user.email}</span>
+                    </td>
+                    <td className="py-4 px-6">
+                      {getStatusBadge(user.status)}
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-900">
+                          {visibleSalaries[user.id] ? formatSalary(user.salary) : '••••••'}
                         </span>
+                        <button
+                          onClick={() => toggleSalaryVisibility(user.id)}
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          {visibleSalaries[user.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">ID: {user.id}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => handleEdit(user.id)}
+                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(user.id)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className="text-sm text-gray-900">{user.role}</span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className="text-sm text-gray-900">{user.email}</span>
-                  </td>
-                  <td className="py-4 px-6">
-                    {getStatusBadge(user.status)}
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-900">
-                        {visibleSalaries[user.id] ? formatSalary(user.salary) : '••••••'}
-                      </span>
-                      <button
-                        onClick={() => toggleSalaryVisibility(user.id)}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {visibleSalaries[user.id] ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => handleEdit(user.id)}
-                        className="text-blue-600 hover:text-blue-800 transition-colors"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(user.id)}
-                        className="text-red-600 hover:text-red-800 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -243,7 +264,7 @@ const UserTable = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between mt-6">
           <div className="text-sm text-gray-700">
-            Showing 1 to 5 of 5 users
+            Showing 1 to {employees.length} of {employees.length} users
           </div>
           <div className="flex items-center gap-2">
             <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
