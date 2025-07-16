@@ -81,7 +81,7 @@ export default function ProductsPage() {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           });
           const data = await res.json();
-          if (res.ok && data.data) {
+          if (res && data.data) {
             setSuppliers(data.data);
           } else {
             setSuppliers([]);
