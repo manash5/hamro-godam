@@ -4,7 +4,7 @@ const expenseSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['salary', 'operational', 'inventory', 'other'], // Different expense types
+    enum: ['salary', 'operational','product', 'other'], 
     default: 'other'
   },
   amount: {
@@ -20,10 +20,6 @@ const expenseSchema = new mongoose.Schema({
     type: Date,
     required: true,
     default: Date.now
-  },
-  dueDate: {
-    type: Date,
-    required: function() { return this.type === 'salary'; } 
   },
   status: {
     type: String,
