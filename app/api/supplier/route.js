@@ -10,7 +10,7 @@ export async function GET(request) {
   }
   try {
     await connectToDB();
-    const suppliers = await Order.find().sort({ createdAt: -1 });
+    const suppliers = await Supplier.find().sort({ createdAt: -1 }).populate('products');
     return NextResponse.json({ data:suppliers }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to supplier' }, { status: 500 });
@@ -32,7 +32,6 @@ export async function POST(request) {
       contact_number: body.contact_number,
       address: body.address,
       category: body.category,
-      pan_number: body.pan_number,
       company_name: body.company_name,
     });
 
@@ -43,6 +42,6 @@ export async function POST(request) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create supplier' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create supplier', details: error }, { status: 500 });
   }
 }

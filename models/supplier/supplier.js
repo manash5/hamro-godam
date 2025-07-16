@@ -20,12 +20,8 @@ const supplierSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    },
+  },
 
-    pan_number: {
-        type: String,
-        required: true,
-    },
   company_name: {
     type: String,
   },
@@ -42,6 +38,13 @@ supplierSchema.set('toJSON', {
     ret.id = ret._id;
     delete ret._id;
   }
+});
+
+supplierSchema.virtual('products', {
+  ref: 'Product',
+  localField: '_id',
+  foreignField: 'supplier',
+  justOne: false,
 });
 
 export const Supplier = mongoose.models.Supplier || mongoose.model('Supplier', supplierSchema);

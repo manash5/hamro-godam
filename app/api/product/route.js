@@ -17,10 +17,11 @@ export async function POST(request) {
       name: body.name,
       description: body.description,
       stock: body.stock,
-        price: body.price,
-        category: body.category,
+      price: body.price,
+      category: body.category,
       image: body.image, // Add image
       status: body.status, // Add status
+      supplier: body.supplier, // <-- add supplier
       // add other fields as needed
     });
 
@@ -31,7 +32,7 @@ export async function POST(request) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create product', details: error }, { status: 500 });
   }
 }
 

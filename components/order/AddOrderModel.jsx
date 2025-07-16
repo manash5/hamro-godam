@@ -26,7 +26,10 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/product');
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/product', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
         const data = await res.json();
         if (res.ok && data.data) {
           setProducts(data.data);
