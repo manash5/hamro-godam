@@ -198,12 +198,12 @@ const App = () => {
       <div className="min-w-7xl px-10 mx-5 bg-slate-100 my-10 rounded-xl">
         {/* Header */}
         <div className="my-6 ">
-          <h1 className="text-4xl font-bold text-gray-900 px-10">Users</h1>
+          <h1 className="text-4xl font-bold text-gray-900 px-10">Employees</h1>
         </div>
 
-        <div className="p-5 px-10 rounded-xl bg-gray-50">
+        <div className="p-5 px-10 rounded-xl bg-slate-100">
         {/* Filters */}
-          <div className="flex gap-4 mb-6 bg-white">
+          <div className="flex gap-4 mb-6 bg-slate-100">
             <FilterDropdown title={selectedRole} />
             <FilterDropdown title={selectedStatus} />
           </div>
