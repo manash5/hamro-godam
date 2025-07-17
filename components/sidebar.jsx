@@ -21,18 +21,20 @@ const Sidebar = () => {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Store, label: 'Inventory', path: '/inventory' },
-    {icon: Package, label: 'Orders', path: './orders' },
-    { icon: ShoppingCart, label: 'Products', path: '/products' },
-    {icon: BookUser, label: 'Suppliers', path: '/suppliers' },
-    { icon: User, label: 'Employees', path: '/users' },
-    { icon: Receipt, label: 'Expenses', path: '/expenses' },
-    { icon: Calendar, label: 'Calendar', path: '/calendar' },
-    {icon: Trello, label: 'Kanban', path: '/kanban' }, 
-    { icon: Settings, label: 'Settings', path: '/settings' }
-  ];
+
+
+const sidebarItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+  { icon: Store, label: 'Inventory', path: '/inventory' },
+  { icon: Package, label: 'Orders', path: '/orders' },
+  { icon: ShoppingCart, label: 'Products', path: '/products' },
+  { icon: BookUser, label: 'Suppliers', path: '/suppliers' },
+  { icon: User, label: 'User', path: '/users' },
+  { icon: Receipt, label: 'Expenses', path: '/expenses' },
+  { icon: Calendar, label: 'Calendar', path: '/calendar' },
+  { icon: Trello, label: 'Tasks', path: '/task' }, 
+  { icon: Settings, label: 'Settings', path: '/settings' },
+];
 
   // Get the active item based on current pathname
   const getActiveItem = () => {
