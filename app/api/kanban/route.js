@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
-import { Task } from '@/models/task/task';
+import Task from '@/models/kanban/kanban';
 import { verifyToken } from '@/utils/auth';
 
 // POST - Create a new task
