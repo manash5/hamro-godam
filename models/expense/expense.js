@@ -3,9 +3,7 @@ import mongoose from 'mongoose';
 const expenseSchema = new mongoose.Schema({
   type: {
     type: String,
-    required: true,
-    enum: ['salary', 'operational','product', 'other'], 
-    default: 'other'
+    required: true
   },
   amount: {
     type: Number,
@@ -26,11 +24,6 @@ const expenseSchema = new mongoose.Schema({
     enum: ['pending', 'paid', 'overdue'],
     default: 'pending'
   },
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee',
-    required: function() { return this.type === 'salary'; } 
-  },
   paymentMethod: {
     type: String,
     enum: ['cash', 'bank_transfer', 'cheque', 'digital_wallet', null],
@@ -41,26 +34,12 @@ const expenseSchema = new mongoose.Schema({
     default: null
   },
   createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee',
+    type: String,
     required: true
   }
 }, {
   timestamps: true,
   collection: 'Expense'
-});
-
-// Virtual for checking if expense is overdue
-expenseSchema.virtual('isOverdue').get(function() {
-  return this.dueDate && this.status === 'pending' && this.dueDate < new Date();
-});
-
-// Middleware to update status based on due date
-expenseSchema.pre('save', function(next) {
-  if (this.dueDate && this.dueDate < new Date() && this.status === 'pending') {
-    this.status = 'overdue';
-  }
-  next();
 });
 
 expenseSchema.set('toJSON', {
@@ -72,4 +51,9 @@ expenseSchema.set('toJSON', {
   }
 });
 
-export const Expense = mongoose.models.Expense || mongoose.model('Expense', expenseSchema);
+// Delete the existing model if it exists to clear any cached validation
+if (mongoose.models.Expense) {
+  delete mongoose.models.Expense;
+}
+
+export const Expense = mongoose.model('Expense', expenseSchema);

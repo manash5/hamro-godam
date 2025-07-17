@@ -17,9 +17,7 @@ export async function GET(request, { params }) {
       );
     }
 
-    const expense = await Expense.findById(id)
-      .populate('employee', 'name position')
-      .populate('createdBy', 'name');
+    const expense = await Expense.findById(id);
 
     if (!expense) {
       return NextResponse.json(
@@ -77,22 +75,12 @@ export async function PATCH(request, { params }) {
     expense.paymentMethod = body.paymentMethod ?? expense.paymentMethod;
     expense.paymentDate = body.paymentDate ?? expense.paymentDate;
 
-    // Special handling for employee field when type is salary
-    if (body.type === 'salary' && body.employee) {
-      expense.employee = body.employee;
-    } else if (body.type !== 'salary') {
-      expense.employee = null;
-    }
-
+    
     await expense.save();
 
-    // Populate the references before returning
-    const populatedExpense = await Expense.findById(expense._id)
-      .populate('employee', 'name position')
-      .populate('createdBy', 'name');
-
+    // Return the expense without population since we removed employee reference
     return NextResponse.json(
-      { data: populatedExpense, message: 'Expense updated successfully' },
+      { data: expense, message: 'Expense updated successfully' },
       { status: 200 }
     );
   } catch (error) {
