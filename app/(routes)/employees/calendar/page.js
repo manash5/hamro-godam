@@ -17,7 +17,7 @@ export default function CalendarPage() {
     <div className="relative flex h-screen max-h-screen w-full  gap-4  items-center justify-start bg-slate-100 ">
       <Sidebar/>
       <div className="relative ">
-        <ContinuousCalendar onClick={onClickHandler} />
+        <ContinuousCalendar onClick={onClickHandler} readOnly={true} />
       </div>
     </div>
   );

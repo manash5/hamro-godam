@@ -59,7 +59,7 @@ const Button = ({ children, variant = 'primary', size = 'md', onClick, className
   );
 };
 
-const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
+const EventModal = ({ isOpen, onClose, event, onSave, onDelete, readOnly = false }) => {
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -74,7 +74,6 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
   useEffect(() => {
     if (event) {
       const formatDateTime = (date) => {
-        // Ensure date is a Date object
         const dateObj = date instanceof Date ? date : new Date(date);
         const year = dateObj.getFullYear();
         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -83,7 +82,6 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
         const minutes = String(dateObj.getMinutes()).padStart(2, '0');
         return `${year}-${month}-${day}T${hours}:${minutes}`;
       };
-
       setFormData({
         title: event.title || '',
         location: event.location || '',
@@ -148,7 +146,7 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              {event?.id ? 'Edit Event' : 'Add Event'}
+              {event?.id ? (readOnly ? 'Event Details' : 'Edit Event') : (readOnly ? 'Event Details' : 'Add Event')}
             </h2>
             {event?.isRecurring && (
               <p className="text-sm text-gray-500 mt-1">
@@ -170,126 +168,173 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Event title"
-              />
+              {readOnly ? (
+                <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.title}</div>
+              ) : (
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Event title"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Event location"
-              />
+              {readOnly ? (
+                <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.location}</div>
+              ) : (
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Event location"
+                />
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Start</label>
-              <input
-                type="datetime-local"
-                name="start"
-                value={formData.start}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {readOnly ? (
+                <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.start.replace('T', ' ')}</div>
+              ) : (
+                <input
+                  type="datetime-local"
+                  name="start"
+                  value={formData.start}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">End</label>
-              <input
-                type="datetime-local"
-                name="end"
-                value={formData.end}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {readOnly ? (
+                <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.end.replace('T', ' ')}</div>
+              ) : (
+                <input
+                  type="datetime-local"
+                  name="end"
+                  value={formData.end}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
             </div>
           </div>
 
           <div className="flex items-center space-x-6">
             <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="allDay"
-                checked={formData.allDay}
-                onChange={handleChange}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
+              {readOnly ? (
+                <input
+                  type="checkbox"
+                  name="allDay"
+                  checked={formData.allDay}
+                  disabled
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              ) : (
+                <input
+                  type="checkbox"
+                  name="allDay"
+                  checked={formData.allDay}
+                  onChange={handleChange}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
               <span className="ml-2 text-sm text-gray-700">All day</span>
             </label>
             <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="timezone"
-                checked={formData.timezone}
-                onChange={handleChange}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
+              {readOnly ? (
+                <input
+                  type="checkbox"
+                  name="timezone"
+                  checked={formData.timezone}
+                  disabled
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              ) : (
+                <input
+                  type="checkbox"
+                  name="timezone"
+                  checked={formData.timezone}
+                  onChange={handleChange}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
               <span className="ml-2 text-sm text-gray-700">Timezone</span>
             </label>
           </div>
 
           <div>
-            <Select
-              name="repeat"
-              value={formData.repeat}
-              label="Repeat"
-              onChange={handleChange}
-              options={[
-                { name: 'Never', value: 'Never' },
-                { name: 'Daily', value: 'Daily' },
-                { name: 'Weekly', value: 'Weekly' },
-                { name: 'Monthly', value: 'Monthly' },
-                { name: 'Yearly', value: 'Yearly' }
-              ]}
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Repeat</label>
+            {readOnly ? (
+              <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.repeat}</div>
+            ) : (
+              <Select
+                name="repeat"
+                value={formData.repeat}
+                label={null}
+                onChange={handleChange}
+                options={[
+                  { name: 'Never', value: 'Never' },
+                  { name: 'Daily', value: 'Daily' },
+                  { name: 'Weekly', value: 'Weekly' },
+                  { name: 'Monthly', value: 'Monthly' },
+                  { name: 'Yearly', value: 'Yearly' }
+                ]}
+              />
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Event description"
-            />
+            {readOnly ? (
+              <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md min-h-[80px]">{formData.description}</div>
+            ) : (
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Event description"
+              />
+            )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-6 border-t border-gray-200">
-          <div>
-            {event?.id && (
-              <Button variant="danger" onClick={handleDelete}>
-                DELETE
+        {!readOnly && (
+          <div className="flex items-center justify-between p-6 border-t border-gray-200">
+            <div>
+              {event?.id && (
+                <Button variant="danger" onClick={handleDelete}>
+                  DELETE
+                </Button>
+              )}
+            </div>
+            <div className="flex space-x-3">
+              <Button variant="secondary" onClick={onClose}>
+                CANCEL
               </Button>
-            )}
+              <Button onClick={handleSave}>
+                SAVE
+              </Button>
+            </div>
           </div>
-          <div className="flex space-x-3">
-            <Button variant="secondary" onClick={onClose}>
-              CANCEL
-            </Button>
-            <Button onClick={handleSave}>
-              SAVE
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
 };
 
-export const ContinuousCalendar = ({ onClick }) => {
+export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(today);
   const [view, setView] = useState('week');
@@ -544,22 +589,13 @@ export const ContinuousCalendar = ({ onClick }) => {
   };
 
   const handleAddEvent = () => {
+    if (readOnly) return;
     setSelectedEvent(null);
     setIsModalOpen(true);
   };
 
   const handleEventClick = (event) => {
-    // If this is a recurring event, we need to find the original event
-    if (event.isRecurring && event.originalEventId) {
-      const originalEvent = events.find(e => e.id === event.originalEventId);
-      if (originalEvent) {
-        setSelectedEvent(originalEvent);
-      } else {
-        setSelectedEvent(event);
-      }
-    } else {
-      setSelectedEvent(event);
-    }
+    setSelectedEvent(event);
     setIsModalOpen(true);
   };
 
@@ -700,12 +736,10 @@ export const ContinuousCalendar = ({ onClick }) => {
               </h2>
             </div>
           </div>
-          
           <div className="flex items-center space-x-3">
             <Button variant="secondary" onClick={handleToday}>
               Today
             </Button>
-            
             <div className="flex bg-gray-100 rounded-lg p-1">
               {['DAY', 'WEEK', 'MONTH'].map((viewType) => (
                 <button
@@ -721,17 +755,17 @@ export const ContinuousCalendar = ({ onClick }) => {
                 </button>
               ))}
             </div>
-            
-            <Button onClick={handleAddEvent}>
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add Event
-            </Button>
+            {!readOnly && (
+              <Button onClick={handleAddEvent}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Event
+              </Button>
+            )}
           </div>
         </div>
       </div>
-
       {/* Calendar Content */}
       <div className="flex-1 overflow-hidden">
         {view === 'day' && (
@@ -761,7 +795,6 @@ export const ContinuousCalendar = ({ onClick }) => {
                 </div>
               </div>
             </div>
-
             {/* Day Grid */}
             <div className="flex-1 overflow-y-auto">
               <div className="grid grid-cols-2 gap-0 min-h-full">
@@ -776,17 +809,15 @@ export const ContinuousCalendar = ({ onClick }) => {
                     </div>
                   ))}
                 </div>
-
                 {/* Day Column */}
                 <div className="relative">
                   {timeSlots.map((slot) => (
                     <div
                       key={slot.hour}
                       className="h-16 border-b border-gray-100 hover:bg-gray-50 cursor-pointer relative"
-                      onClick={() => onClick && onClick(currentDate.getDate(), currentDate.getMonth(), currentDate.getFullYear())}
+                      onClick={() => !readOnly && onClick && onClick(currentDate.getDate(), currentDate.getMonth(), currentDate.getFullYear())}
                     />
                   ))}
-                  
                   {/* Events for this day */}
                   {getEventsForDate(currentDate).map((event) => {
                     // Convert string dates to Date objects if needed
@@ -852,7 +883,6 @@ export const ContinuousCalendar = ({ onClick }) => {
             </div>
           </div>
         )}
-
         {view === 'week' && (
           <div className="h-full flex flex-col">
             {/* Week Header */}
@@ -885,7 +915,6 @@ export const ContinuousCalendar = ({ onClick }) => {
                 ))}
               </div>
             </div>
-
             {/* Week Grid */}
             <div className="flex-1 overflow-y-auto">
               <div className="grid grid-cols-8 gap-0 min-h-full">
@@ -900,7 +929,6 @@ export const ContinuousCalendar = ({ onClick }) => {
                     </div>
                   ))}
                 </div>
-
                 {/* Day Columns */}
                 {getWeekDays().map((date, dayIndex) => (
                   <div key={dayIndex} className="border-r border-gray-200 last:border-r-0 relative">
@@ -908,10 +936,9 @@ export const ContinuousCalendar = ({ onClick }) => {
                       <div
                         key={slot.hour}
                         className="h-16 border-b border-gray-100 hover:bg-gray-50 cursor-pointer relative"
-                        onClick={() => onClick && onClick(date.getDate(), date.getMonth(), date.getFullYear())}
+                        onClick={() => !readOnly && onClick && onClick(date.getDate(), date.getMonth(), date.getFullYear())}
                       />
                     ))}
-                    
                     {/* Events for this day */}
                     {getEventsForDate(date).map((event) => {
                       // Convert string dates to Date objects if needed
@@ -978,7 +1005,6 @@ export const ContinuousCalendar = ({ onClick }) => {
             </div>
           </div>
         )}
-
         {view === 'month' && (
           <div className="h-full bg-white">
             <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
@@ -988,12 +1014,10 @@ export const ContinuousCalendar = ({ onClick }) => {
                 </div>
               ))}
             </div>
-            
             <div className="grid grid-cols-7 gap-0 flex-1 h-full">
               {getMonthDays().map((date, index) => {
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth();
                 const dayEvents = getEventsForDate(date);
-                
                 return (
                   <div
                     key={index}
@@ -1040,7 +1064,6 @@ export const ContinuousCalendar = ({ onClick }) => {
           </div>
         )}
       </div>
-
       {/* Event Modal */}
       <EventModal
         isOpen={isModalOpen}
@@ -1048,6 +1071,7 @@ export const ContinuousCalendar = ({ onClick }) => {
         event={selectedEvent}
         onSave={handleSaveEvent}
         onDelete={handleDeleteEvent}
+        readOnly={readOnly}
       />
     </div>
   );
