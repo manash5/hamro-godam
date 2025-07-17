@@ -26,8 +26,8 @@ const Sidebar = () => {
     { icon: Store, label: 'Inventory', path: '/employees/inventory' },
     {icon: Package, label: 'Orders', path: '/employees/orders' },
     { icon: ShoppingCart, label: 'Products', path: '/employees/products' },
-    {icon: BookUser, label: 'Suppliers', path: '/suppliers' },
-    { icon: Calendar, label: 'Calendar', path: '/calendar' },
+    {icon: BookUser, label: 'Suppliers', path: '/employees/suppliers' },
+    { icon: Calendar, label: 'Calendar', path: '/employees/calendar' },
     { icon: Settings, label: 'Settings', path: '/settings' }
   ];
 
