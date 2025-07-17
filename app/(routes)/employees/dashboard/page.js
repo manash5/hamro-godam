@@ -2,83 +2,241 @@
 
 import React from "react";
 import Link from "next/link";
+import Sidebar from "@/components/employee/sidebar";
+import { Search, Bell, ShoppingCart, Package, AlertTriangle, Plus, BarChart3, Settings, FileText, QrCode } from "lucide-react";
 
 const Page = () => {
   return (
     <div className="flex h-screen w-screen bg-[#f3f9fb] font-sans">
       {/* Sidebar */}
-      <aside className="w-[220px] bg-[#1d3557] text-[#c4f5d5] p-5 flex-shrink-0 flex flex-col">
-        <h2 className="text-2xl mb-8 font-bold">HAMROGODAM</h2>
-        <ul className="space-y-2">
-          <li>
-            <Link
-              href="/employees/inventory"
-              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
-            >
-              Inventory
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/employees/products"
-              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
-            >
-              Products
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/employees/user"
-              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
-            >
-              User
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/employees/settings"
-              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
-            >
-              Settings
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/employees/expenses"
-              className="block hover:bg-[#2b4d74] rounded px-2 py-2 transition"
-            >
-              Expenses
-            </Link>
-          </li>
-        </ul>
-      </aside>
+      <Sidebar/>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold text-[#1d3557]">Welcome to HGODAM Dashboard</h1>
-          <p className="text-[#6c757d] font-medium mt-2">Quick overview of your inventory and activity</p>
-        </header>
+      <div className="flex-1 flex flex-col overflow-hidden">
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-md text-center hover:-translate-y-1 transition">
-            <h2 className="text-3xl font-bold text-[#1d3557]">5</h2>
-            <p className="mt-2 text-[#6c757d] font-medium">Total Products</p>
+        {/* Dashboard Content */}
+        <div className="flex-1 overflow-auto p-6 mt-10">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-6 mb-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Total Sales</div>
+                  <div className="text-2xl font-bold text-gray-900">$45,250</div>
+                </div>
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="w-5 h-5 bg-blue-600 rounded text-white text-xs font-bold flex items-center justify-center">$</div>
+                </div>
+              </div>
+              <div className="mt-2 text-sm text-green-600">+12%</div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Total Orders</div>
+                  <div className="text-2xl font-bold text-gray-900">127</div>
+                </div>
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <ShoppingCart className="w-5 h-5 text-green-600" />
+                </div>
+              </div>
+              <div className="mt-2 text-sm text-green-600">+8%</div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Low Stock</div>
+                  <div className="text-2xl font-bold text-gray-900">14</div>
+                </div>
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+              </div>
+              <div className="mt-2 text-sm text-red-600">-2</div>
+            </div>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-md text-center hover:-translate-y-1 transition">
-            <h2 className="text-3xl font-bold text-[#1d3557]">$12,750</h2>
-            <p className="mt-2 text-[#6c757d] font-medium">Total Inventory Value</p>
+
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-6">
+              {/* Hot Products */}
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-semibold text-gray-900">Hot Products</h3>
+                  <p className="text-sm text-gray-600">Best selling items this week</p>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      N
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Nike Air Max 270</div>
+                      <div className="text-sm text-gray-500">45 units sold</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-900">$8,500</div>
+                      <div className="text-sm text-green-600">+15%</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-4">
+                    <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      J
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Jordan Retro 1</div>
+                      <div className="text-sm text-gray-500">32 units sold</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-900">$12,800</div>
+                      <div className="text-sm text-green-600">+22%</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-4">
+                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      A
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Adidas Ultraboost</div>
+                      <div className="text-sm text-gray-500">28 units sold</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-900">$9,200</div>
+                      <div className="text-sm text-green-600">+18%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Tasks */}
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-semibold text-gray-900">Today's Tasks</h3>
+                  <p className="text-sm text-gray-600">4 pending tasks</p>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-4 h-4 border-2 border-gray-300 rounded"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Restock Nike Air Max section</div>
+                    </div>
+                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">High</span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <div className="w-4 h-4 border-2 border-gray-300 rounded"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Update product pricing</div>
+                    </div>
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">Medium</span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <div className="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Morning inventory check</div>
+                    </div>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Complete</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Recent Activity */}
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                  <p className="text-sm text-gray-600">Latest store activities</p>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">New order received</div>
+                      <div className="text-sm text-gray-500">Order #12045 - Nike Air Max</div>
+                    </div>
+                    <div className="text-sm text-gray-500">2 min ago</div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Converse Chuck Taylor - 3 left</div>
+                    </div>
+                    <div className="text-sm text-gray-500">5 min ago</div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Inventory updated</div>
+                      <div className="text-sm text-gray-500">Added 50 units of Vans Old Skool</div>
+                    </div>
+                    <div className="text-sm text-gray-500">15 min ago</div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">Payment received</div>
+                      <div className="text-sm text-gray-500">Order #12044 - $15,600</div>
+                    </div>
+                    <div className="text-sm text-gray-500">32 min ago</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <button className="bg-blue-600 text-white p-4 rounded-lg flex flex-col items-center space-y-2 hover:bg-blue-700 transition-colors">
+                      <Plus className="w-5 h-5" />
+                      <span className="text-sm font-medium">Add Product</span>
+                      <span className="text-xs opacity-80">Create new item</span>
+                    </button>
+
+                    <button className="bg-green-600 text-white p-4 rounded-lg flex flex-col items-center space-y-2 hover:bg-green-700 transition-colors">
+                      <BarChart3 className="w-5 h-5" />
+                      <span className="text-sm font-medium">View Report</span>
+                      <span className="text-xs opacity-80">Sales analytics</span>
+                    </button>
+
+                    <button className="bg-purple-600 text-white p-4 rounded-lg flex flex-col items-center space-y-2 hover:bg-purple-700 transition-colors">
+                      <FileText className="w-5 h-5" />
+                      <span className="text-sm font-medium">Generate Invoice</span>
+                      <span className="text-xs opacity-80">Billing & receipts</span>
+                    </button>
+
+                    <button className="bg-gray-600 text-white p-4 rounded-lg flex flex-col items-center space-y-2 hover:bg-gray-700 transition-colors">
+                      <QrCode className="w-5 h-5" />
+                      <span className="text-sm font-medium">Inventory Scan</span>
+                      <span className="text-xs opacity-80">QR code scanner</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Settings Button */}
+              <button className="w-full bg-orange-500 text-white p-4 rounded-lg flex items-center justify-center space-x-2 hover:bg-orange-600 transition-colors">
+                <Settings className="w-5 h-5" />
+                <span className="font-medium">Settings</span>
+              </button>
+            </div>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-md text-center hover:-translate-y-1 transition">
-            <h2 className="text-3xl font-bold text-[#1d3557]">3</h2>
-            <p className="mt-2 text-[#6c757d] font-medium">Low Stock Items</p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-md text-center hover:-translate-y-1 transition">
-            <h2 className="text-3xl font-bold text-[#1d3557]">$2,500</h2>
-            <p className="mt-2 text-[#6c757d] font-medium">Monthly Sales</p>
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
   );
 };

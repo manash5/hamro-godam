@@ -29,7 +29,12 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     required: true,
     default: true, 
-  }
+  },
+  supplier: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Supplier',
+    required: true,
+  },
 }, {
   timestamps: true,            
   collection: 'Products'        

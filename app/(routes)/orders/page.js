@@ -23,31 +23,34 @@ export default function OrdersPage() {
 
  
   useEffect(() => {
-  const fetchOrders = async () => {
-    const res = await fetch('/api/order');
-    const data = await res.json();
-    if (res.ok && data.data) {
-      // Map your backend order fields to the frontend table format
-      setOrders(
-        data.data.map((order, idx) => ({
-          id: order._id,
-          customer: order.customerName,
-          phone: order.customerNumber, // This is actually the phone number
-          email: "", // We don't store email in the model
-          date: new Date(order.createdAt).toLocaleDateString(),
-          time: new Date(order.createdAt).toLocaleTimeString(),
-          amount: order.totalAmount,
-          status: order.status.toUpperCase(),
-          items: `${order.productName.length} Items`,
-          itemsDetail: order.productName.join(', '),
-          payment: order.payment || 'Not specified',
-          // Store original data for editing
-          originalData: order,
-        }))
-      );
-    }
-  };
-  fetchOrders(); 
+    const fetchOrders = async () => {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/order', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        // Map your backend order fields to the frontend table format
+        setOrders(
+          data.data.map((order, idx) => ({
+            id: order._id,
+            customer: order.customerName,
+            phone: order.customerNumber, // This is actually the phone number
+            email: "", // We don't store email in the model
+            date: new Date(order.createdAt).toLocaleDateString(),
+            time: new Date(order.createdAt).toLocaleTimeString(),
+            amount: order.totalAmount,
+            status: order.status.toUpperCase(),
+            items: `${order.productName.length} Items`,
+            itemsDetail: order.productName.join(', '),
+            payment: order.payment || 'Not specified',
+            // Store original data for editing
+            originalData: order,
+          }))
+        );
+      }
+    };
+    fetchOrders(); 
   }, []);
 
   // Close dropdown when clicking outside
@@ -106,9 +109,13 @@ export default function OrdersPage() {
 
   const handleSaveOrder = async (orderData) => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(orderData),
       });
       const result = await res.json();
@@ -142,9 +149,13 @@ export default function OrdersPage() {
 
   const handleEditOrder = async (orderData) => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/order/${editOrder.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(orderData),
       });
       const result = await res.json();
@@ -179,8 +190,10 @@ export default function OrdersPage() {
 
   const handleDeleteOrder = async (orderId) => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/order/${orderId}`, {
         method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
 
       if (res.ok) {

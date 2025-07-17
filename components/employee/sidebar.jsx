@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react'
-import Logo from './Logo' 
+import Logo from '../Logo' 
 import { 
   LayoutDashboard, 
   Package, 
@@ -22,15 +22,12 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/employees/dashboard' },
     { icon: Store, label: 'Inventory', path: '/inventory' },
     {icon: Package, label: 'Orders', path: './orders' },
     { icon: ShoppingCart, label: 'Products', path: '/products' },
     {icon: BookUser, label: 'Suppliers', path: '/suppliers' },
-    { icon: User, label: 'Employees', path: '/users' },
-    { icon: Receipt, label: 'Expenses', path: '/expenses' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
-    {icon: Trello, label: 'Kanban', path: '/kanban' }, 
     { icon: Settings, label: 'Settings', path: '/settings' }
   ];
 

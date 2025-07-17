@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
     const { id } = params;
     await connectToDB();
 
-    const supplier = await Supplier.findById(id);
+    const supplier = await Supplier.findById(id).populate('products');
     if (!supplier) {
       return NextResponse.json({ message: 'Supplier not found' }, { status: 404 });
     }

@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { Product } from '@/models/product/product';
+import { verifyToken } from '@/utils/auth';
 
 // POST create new product
 export async function POST(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     const body = await request.json();
     await connectToDB();
@@ -12,10 +17,11 @@ export async function POST(request) {
       name: body.name,
       description: body.description,
       stock: body.stock,
-        price: body.price,
-        category: body.category,
+      price: body.price,
+      category: body.category,
       image: body.image, // Add image
       status: body.status, // Add status
+      supplier: body.supplier, // <-- add supplier
       // add other fields as needed
     });
 
@@ -26,12 +32,16 @@ export async function POST(request) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create product', details: error }, { status: 500 });
   }
 }
 
 // GET all products
-export async function GET() {
+export async function GET(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     await connectToDB();
     const products = await Product.find({}).sort({ createdAt: -1 });
