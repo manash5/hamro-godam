@@ -57,7 +57,11 @@ const page = () => {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/kanban');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/kanban', {
+        method: 'GET', 
+        headers: { Authorization: `Bearer ${token}`}
+      });
       const data = await res.json();
       setAllTasks(data.data || []);
       setColumns(groupTasksByStatus(data.data || []));
@@ -97,9 +101,12 @@ const page = () => {
       priority: PRIORITY_MAP[targetCol.status].priority,
     };
     try {
+      const token = localStorage.getItem('token'); 
       await fetch(`/api/kanban/${draggedTask.task._id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 
+           Authorization: `Bearer ${token}`
+         },
         body: JSON.stringify(update),
       });
       fetchTasks();
@@ -121,9 +128,10 @@ const page = () => {
       priority: newTask.priority || 'MEDIUM',
     };
     try {
+      const token = localStorage.getItem('token'); 
       await fetch('/api/kanban', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',  Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
       fetchTasks();
@@ -135,7 +143,11 @@ const page = () => {
   // Delete task
   const handleDeleteTask = async (columnId, taskId) => {
     try {
-      await fetch(`/api/kanban/${taskId}`, { method: 'DELETE' });
+      const token = localStorage.getItem('token'); 
+      await fetch(`/api/kanban/${taskId}`, { method: 'DELETE' , 
+        headers: {Authorization: `Bearer ${token}`}
+      }
+      );
       fetchTasks();
     } catch (err) {}
     setOpenMenuTaskId(null);
@@ -188,7 +200,8 @@ const page = () => {
                   type="text"
                   placeholder="Assignee initials"
                   value={newTask.assignee}
-                  onChange={(e) => setNewTask({...newTask, assignee: e.target.value})}
+                  maxLength={3}
+                  onChange={(e) => setNewTask({...newTask, assignee: e.target.value.toUpperCase()})}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <select
