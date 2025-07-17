@@ -19,6 +19,8 @@ export default function OrdersPage() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [addOrderCustomerOrderCount, setAddOrderCustomerOrderCount] = useState(0);
+  const [addOrderCustomerName, setAddOrderCustomerName] = useState("");
   const dropdownRefs = useRef({});
 
  
@@ -232,6 +234,22 @@ export default function OrdersPage() {
     }
   };
 
+  // Helper to count previous orders for a customer by name or phone
+  const getOrderCountForCustomer = (customerName, customerNumber) => {
+    return orders.filter(
+      (order) =>
+        (customerName && order.customer === customerName) ||
+        (customerNumber && order.phone === customerNumber)
+    ).length;
+  };
+
+  // When opening Add Order Modal, reset customer order count
+  const handleOpenAddOrderModal = () => {
+    setAddOrderCustomerOrderCount(0);
+    setAddOrderCustomerName("");
+    setShowAddOrderModal(true);
+  };
+
   return (
     <div className="flex h-screen bg-slate-100 text-balck">
       <Sidebar />
@@ -243,7 +261,7 @@ export default function OrdersPage() {
             <p className="text-sm text-gray-500 mt-1">Track your orders instantly</p>
           </div>
           <button 
-            onClick={() => setShowAddOrderModal(true)}
+            onClick={handleOpenAddOrderModal}
             className="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
             <Plus size={18} /> Add Order
@@ -381,6 +399,14 @@ export default function OrdersPage() {
         isOpen={showAddOrderModal}
         onClose={() => setShowAddOrderModal(false)}
         onSave={handleSaveOrder}
+        showDiscountOption={addOrderCustomerOrderCount > 5}
+        previousOrderCount={addOrderCustomerOrderCount}
+        onCustomerChange={(name, number) => {
+          // Called from modal when customer name/number changes
+          const count = getOrderCountForCustomer(name, number);
+          setAddOrderCustomerOrderCount(count);
+          setAddOrderCustomerName(name);
+        }}
       />
 
       {/* Edit Order Modal */}
