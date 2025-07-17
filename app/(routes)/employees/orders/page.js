@@ -72,11 +72,11 @@ const OrdersPage = () => {
   return (
     <div className="h-screen bg-gray-50 flex">
         <Sidebar/>
-      <div className="min-w-7xl mx-auto mt-10">
+      <div className="min-w-7xl mx-auto mt-10 text-black">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5" />
             <input
               type="text"
               placeholder="Search customers..."
