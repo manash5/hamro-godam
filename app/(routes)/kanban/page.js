@@ -47,7 +47,6 @@ const page = () => {
     title: '',
     category: '',
     description: '',
-    assignee: '',
     columnId: '',
     priority: 'MEDIUM',
   });
@@ -123,7 +122,6 @@ const page = () => {
       title: newTask.title,
       category: newTask.category || 'General',
       description: newTask.description,
-      assignee: newTask.assignee || 'UN',
       status: col.status,
       priority: newTask.priority || 'MEDIUM',
     };
@@ -136,7 +134,7 @@ const page = () => {
       });
       fetchTasks();
     } catch (err) {}
-    setNewTask({ title: '', category: '', description: '', assignee: '', columnId: '', priority: 'MEDIUM' });
+    setNewTask({ title: '', category: '', description: '', columnId: '', priority: 'MEDIUM' });
     setShowAddForm(false);
   };
 
@@ -195,14 +193,6 @@ const page = () => {
                   onChange={(e) => setNewTask({...newTask, description: e.target.value})}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows="3"
-                />
-                <input
-                  type="text"
-                  placeholder="Assignee initials"
-                  value={newTask.assignee}
-                  maxLength={3}
-                  onChange={(e) => setNewTask({...newTask, assignee: e.target.value.toUpperCase()})}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <select
                   value={newTask.columnId}

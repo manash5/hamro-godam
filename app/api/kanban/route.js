@@ -23,14 +23,13 @@ export async function POST(request) {
     console.log('Database connected successfully');
 
     // Validation
-    if (!body.title || !body.category || !body.assignee) {
+    if (!body.title || !body.category) {
       console.log('Missing required fields:', {
         title: body.title,
-        category: body.category,
-        assignee: body.assignee
+        category: body.category
       });
       return NextResponse.json(
-        { message: 'Missing required fields (title, category, assignee)' },
+        { message: 'Missing required fields (title, category)' },
         { status: 400 }
       );
     }
@@ -39,7 +38,6 @@ export async function POST(request) {
       title: body.title,
       category: body.category,
       description: body.description || '',
-      assignee: body.assignee,
       status: body.status || 'To Review',
       priority: body.priority || 'MEDIUM',
       createdAt: new Date()
@@ -49,7 +47,6 @@ export async function POST(request) {
       title: body.title,
       category: body.category,
       description: body.description,
-      assignee: body.assignee,
       status: body.status || 'To Review',
       priority: body.priority || 'MEDIUM'
     });

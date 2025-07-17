@@ -15,13 +15,6 @@ const TaskSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  assignee: {
-    type: String,
-    required: [true, 'Assignee initials are required'],
-    trim: true,
-    uppercase: true,
-    maxlength: [3, 'Assignee initials should be 3 characters or less']
-  },
   status: {
     type: String,
     required: true,
