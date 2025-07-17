@@ -23,9 +23,9 @@ const Sidebar = () => {
 
   const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/employees/dashboard' },
-    { icon: Store, label: 'Inventory', path: '/inventory' },
-    {icon: Package, label: 'Orders', path: './orders' },
-    { icon: ShoppingCart, label: 'Products', path: '/products' },
+    { icon: Store, label: 'Inventory', path: '/employees/inventory' },
+    {icon: Package, label: 'Orders', path: '/employees/orders' },
+    { icon: ShoppingCart, label: 'Products', path: '/employees/products' },
     {icon: BookUser, label: 'Suppliers', path: '/suppliers' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
     { icon: Settings, label: 'Settings', path: '/settings' }
