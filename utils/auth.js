@@ -24,7 +24,9 @@ export function verifyToken(request) {
   }
   try {
     const decoded = jwt.verify(token, secretKey);
-    return { valid: true, decoded };
+    // Extract userId from the decoded token
+    const userId = decoded.user?._id || decoded.user?.id;
+    return { valid: true, decoded, userId };
   } catch (err) {
     return { valid: false, message: 'Invalid or expired token.' };
   }
