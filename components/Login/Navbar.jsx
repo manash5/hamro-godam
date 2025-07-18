@@ -3,7 +3,7 @@ import React from 'react';
 import Logo from '../Logo';
 import { useRouter } from 'next/navigation'; 
 
-const Navbar = ({ name }) => {
+const Navbar = ({ name, hideButton = false }) => {
   const router = useRouter(); 
 
   const handleClick = () => {
@@ -16,12 +16,14 @@ const Navbar = ({ name }) => {
         <Logo />
         <h1 className="text-xl font-bold text-primary-500 px-2">Hamro Godam</h1>
       </div>
-      <button
-        onClick={handleClick} 
-        className="btn-primary bg-white px-8 py-3 rounded-md text-blue-950 hover:bg-primary-800 font-semibold transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-      >
-        {name}
-      </button>
+      {!hideButton && (
+        <button
+          onClick={handleClick} 
+          className="btn-primary bg-white px-8 py-3 rounded-md text-blue-950 hover:bg-primary-800 font-semibold transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+        >
+          {name}
+        </button>
+      )}
     </div>
   );
 };
