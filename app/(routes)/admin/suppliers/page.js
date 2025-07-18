@@ -13,28 +13,39 @@ export default function SupplierPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [viewingProducts, setViewingProducts] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch suppliers from API
+  const fetchSuppliers = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch("/api/supplier", {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setSuppliers(data.data);
+      } else {
+        setSuppliers([]);
+      }
+    } catch (err) {
+      setSuppliers([]);
+      console.error("Failed to fetch suppliers:", err);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     fetchSuppliers();
   }, []);
 
-  const fetchSuppliers = async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch("/api/supplier", {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-    });
-    const data = await res.json();
-    if (res.ok && data.data) {
-      setSuppliers(data.data);
-    }
-  };
-
   useEffect(() => {
     const filtered = suppliers.filter((supplier) => {
       const matchSearch =
-        supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        supplier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        supplier.contact_number.includes(searchTerm);
+        (supplier.name?.toLowerCase().includes(searchTerm.toLowerCase()) || "") ||
+        (supplier.email?.toLowerCase().includes(searchTerm.toLowerCase()) || "") ||
+        (supplier.contact_number?.toString().includes(searchTerm) || "");
 
       const matchCategory =
         categoryFilter === "All Categories" || supplier.category === categoryFilter;
@@ -45,7 +56,6 @@ export default function SupplierPage() {
   }, [searchTerm, categoryFilter, suppliers]);
 
   const handleSave = async (data) => {
-    // Only send allowed fields
     const allowedFields = ['name', 'email', 'contact_number', 'address', 'category', 'company_name'];
     const filteredData = Object.fromEntries(Object.entries(data).filter(([key]) => allowedFields.includes(key)));
     const method = editingSupplier ? "PUT" : "POST";
@@ -100,7 +110,6 @@ export default function SupplierPage() {
             <X size={24} />
           </button>
         </div>
-        
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -133,7 +142,6 @@ export default function SupplierPage() {
             </tbody>
           </table>
         </div>
-        
         <div className="mt-4 flex justify-between items-center">
           <p className="text-sm text-gray-600">
             Total Products: {supplier.products ? supplier.products.length : 0}
@@ -197,93 +205,96 @@ export default function SupplierPage() {
 
         {/* Enhanced Table */}
         <div className="bg-white m-5 rounded-md overflow-x-auto shadow-sm">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredSuppliers.map((supplier) => (
-                <tr key={supplier.id || supplier._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{supplier.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 flex items-center gap-1">
-                      <Mail size={14} className="text-gray-400" />
-                      {supplier.email}
-                    </div>
-                    <div className="text-sm text-gray-500 flex items-center gap-1">
-                      <Phone size={14} className="text-gray-400" />
-                      {supplier.contact_number}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      <Tag size={12} className="mr-1" />
-                      {supplier.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 flex items-center gap-1">
-                      <Building size={14} className="text-gray-400" />
-                      {supplier.company_name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <Package size={16} className="text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900">
-                        {supplier.products ? supplier.products.length : 0}
-                      </span>
-                      <button
-                        onClick={() => handleViewProducts(supplier)}
-                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
-                      >
-                        <Eye size={14} />
-                        View All
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingSupplier(supplier);
-                          setShowModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                        title="Edit supplier"
-                      >
-                        <Edit3 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(supplier.id || supplier._id)}
-                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                        title="Delete supplier"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">Loading suppliers...</div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          {filteredSuppliers.length === 0 && (
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredSuppliers.map((supplier) => (
+                  <tr key={supplier.id || supplier._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{supplier.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 flex items-center gap-1">
+                        <Mail size={14} className="text-gray-400" />
+                        {supplier.email}
+                      </div>
+                      <div className="text-sm text-gray-500 flex items-center gap-1">
+                        <Phone size={14} className="text-gray-400" />
+                        {supplier.contact_number}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <Tag size={12} className="mr-1" />
+                        {supplier.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 flex items-center gap-1">
+                        <Building size={14} className="text-gray-400" />
+                        {supplier.company_name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <Package size={16} className="text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {supplier.products ? supplier.products.length : 0}
+                        </span>
+                        <button
+                          onClick={() => handleViewProducts(supplier)}
+                          className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                        >
+                          <Eye size={14} />
+                          View All
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingSupplier(supplier);
+                            setShowModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                          title="Edit supplier"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(supplier.id || supplier._id)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                          title="Delete supplier"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {!loading && filteredSuppliers.length === 0 && (
             <div className="text-center py-12">
               <Package size={48} className="mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No suppliers found</h3>
               <p className="text-gray-500 mb-4">
-                {searchTerm || categoryFilter !== "All Categories" 
-                  ? "Try adjusting your search or filters" 
+                {searchTerm || categoryFilter !== "All Categories"
+                  ? "Try adjusting your search or filters"
                   : "Get started by adding your first supplier"}
               </p>
               <button
