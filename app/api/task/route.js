@@ -24,6 +24,8 @@ export async function POST(request) {
       assignedTo: body.assignedTo, // should be employee _id
       dueDate: body.dueDate,
       status: body.status || 'pending',
+      priority: body.priority || 'medium',
+      tags: body.tags || [],
     });
 
     await newTask.save();
