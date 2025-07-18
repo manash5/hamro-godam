@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { Employee } from '@/models/employee/employee';
 import { verifyToken } from '@/utils/auth';
+import { generateToken } from '@/utils/token';
 
 // POST create new employee
 export async function POST(request) {
@@ -10,6 +11,22 @@ export async function POST(request) {
     return NextResponse.json({ message }, { status: 401 });
   }
   try {
+    const url = new URL(request.url);
+    if (url.pathname.endsWith('/login')) {
+      try {
+        const { email, password } = await request.json();
+        await connectToDB();
+        const employee = await Employee.findOne({ email });
+        if (!employee || employee.password !== password) {
+          return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });
+        }
+        // Generate token with employee id
+        const token = generateToken({ employeeId: employee._id });
+        return NextResponse.json({ token, employeeId: employee._id, message: 'Login successful' }, { status: 200 });
+      } catch (error) {
+        return NextResponse.json({ error: 'Login failed' }, { status: 500 });
+      }
+    }
     const body = await request.json();
     await connectToDB();
 

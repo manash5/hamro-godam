@@ -28,11 +28,26 @@ const EmployeeLoginPage = () => {
     }
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Call the employee login API
+      const res = await fetch('/api/employee/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password })
+      });
+      const result = await res.json();
       setIsLoading(false);
-      alert('Login successful! Redirecting...');
-    }, 2000);
+      if (res.ok) {
+        localStorage.setItem('employeeToken', result.token);
+        localStorage.setItem('employeeId', result.employeeId); // Store employeeId for My Task page
+        window.location.href = '/employees/dashboard';
+      } else {
+        alert(result.message || 'Login failed');
+      }
+    } catch (error) {
+      setIsLoading(false);
+      alert('Login failed. Please try again.');
+    }
   };
 
   const handleKeyPress = (e) => {
