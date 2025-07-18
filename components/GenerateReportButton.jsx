@@ -110,7 +110,7 @@ const GenerateReportButton = ({ chartRef }) => {
 
   return (
     <button
-      className="group relative overflow-hidden px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5"
+      className="group relative overflow-hidden px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-900/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5"
       style={{ background: 'linear-gradient(to right, #3b82f6, #6366f1)', color: '#fff' }}
       onClick={handleGenerateReport}
     >
