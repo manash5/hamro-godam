@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { Task } from '@/models/task/task';
 
+
 export async function GET(request) {
   try {
     await connectToDB();
@@ -17,6 +18,7 @@ export async function GET(request) {
     } else {
       tasks = await Task.find().populate('assignedTo').sort({ createdAt: -1 });
     }
+
     return NextResponse.json({ data: tasks }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch tasks' }, { status: 500 });
@@ -34,9 +36,10 @@ export async function POST(request) {
       assignedTo: body.assignedTo, // should be employee _id
       dueDate: body.dueDate,
       status: body.status || 'pending',
+
       priority: body.priority || 'medium',
       tags: body.tags || [],
-    });
+
 
     await newTask.save();
 
