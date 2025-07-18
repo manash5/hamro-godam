@@ -13,6 +13,7 @@ import {
   Store, 
   BookUser,
   Trello, 
+  NotebookText, 
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -27,6 +28,7 @@ const Sidebar = () => {
     {icon: Package, label: 'Orders', path: '/employees/orders' },
     { icon: ShoppingCart, label: 'Products', path: '/employees/products' },
     {icon: BookUser, label: 'Suppliers', path: '/employees/suppliers' },
+    {icon: NotebookText, label: 'My Tasks', path: '/employees/mytask'}, 
     { icon: Calendar, label: 'Calendar', path: '/employees/calendar' },
     { icon: Settings, label: 'Settings', path: '/settings' }
   ];

@@ -22,7 +22,12 @@ export async function PUT(request, { params }) {
     const updates = await request.json();
     await connectToDB();
 
-    const updatedTask = await Task.findByIdAndUpdate(params.id, updates, { new: true });
+    const updatedTask = await Task.findByIdAndUpdate(
+      params.id,
+      updates,
+      { new: true }
+    );
+
 
     if (!updatedTask) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });

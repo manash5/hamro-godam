@@ -301,7 +301,7 @@ const AddEditUserForm = ({ user = null, onSave, onCancel, isOpen = false }) => {
                 </label>
                 <select
                   name="status"
-                  value={formData.status}
+                  value={formData.sGETtatus}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >

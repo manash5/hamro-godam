@@ -1,8 +1,14 @@
-import React from 'react'
+"use client"
+import React, { useRef } from 'react'
 import Sidebar from '../../../components/sidebar'
 import { Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw, CheckCircle, Tag, Sparkles, FileText } from 'lucide-react'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import GenerateReportButton from '../../../components/GenerateReportButton';
 
 const page = () => {
+  const dashboardRef = useRef(null);
+  const chartRef = useRef(null);
 
   const products = [
     {
@@ -115,31 +121,56 @@ const page = () => {
 
   const maxValue = 350;
 
+  // Function to generate analysis text
+  const generateAnalysis = () => {
+    const totalCustomers = 30567;
+    const totalProducts = 3037;
+    const totalSales = 20509;
+    const salesChange = '+33%';
+    const totalRefunds = 21647;
+    const refundsChange = '-12%';
+    const mostPopularProduct = products.reduce((max, p) => (parseInt(p.sold) > parseInt(max.sold) ? p : max), products[0]);
+    const highestSalesMonth = chartData.reduce((max, d) => (d.blue > max.blue ? d : max), chartData[0]);
+
+    return (
+      `Dashboard Analysis Report\n\n` +
+      `- Total Customers: ${totalCustomers}\n` +
+      `- Total Products: ${totalProducts}\n` +
+      `- Total Sales: ${totalSales} (${salesChange})\n` +
+      `- Total Refunds: ${totalRefunds} (${refundsChange})\n` +
+      `- Most Popular Product: ${mostPopularProduct.name} (${mostPopularProduct.sold} sold)\n` +
+      `- Highest Sales Month: ${highestSalesMonth.month} (${highestSalesMonth.blue} units)\n`
+    );
+  };
+
   return (
     <>
-      <div className="flex min-h-screen bg-slate-100">
+      <div
+        className="flex min-h-screen"
+        style={{ backgroundColor: '#f1f5f9' }}
+      >
         <Sidebar />
-        <div className="flex-1 p-6 overflow-y-auto max-h-screen hide-scrollbar">
-          <div className="max-w-[1800px] mx-auto space-y-6 pb-6">
-            {/* Welcome Section (unchanged from your second file) */}    
+        <div
+          className="flex-1 p-6 overflow-y-auto max-h-screen hide-scrollbar"
+          style={{ backgroundColor: '#f1f5f9' }}
+        >
+          <div
+            className="max-w-[1800px] mx-auto space-y-6 pb-6"
+            ref={dashboardRef}
+            style={{ backgroundColor: '#f1f5f9' }}
+          >
+            {/* Welcome Section */}
             <div className="relative my-5 flex justify-between items-center">
               <div className="mb-6">
                 <div className="flex items-center mb-3">
-                  <div className="w-1.5 h-10 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full mr-4"></div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 bg-clip-text text-transparent">
+                  <div style={{ width: '0.375rem', height: '2.5rem', background: 'linear-gradient(to bottom, #6366f1, #a21caf)', borderRadius: '9999px', marginRight: '1rem' }}></div>
+                  <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', background: 'linear-gradient(to right, #1f2937, #374151, #4b5563)', WebkitBackgroundClip: 'text', color: 'transparent' }}>
                     Welcome back, User!
                   </h1>
                 </div>
-                <p className="text-gray-500 ml-6 text-lg font-medium">Here's what's happening with your store today.</p>
+                <p style={{ color: '#6b7280', marginLeft: '1.5rem', fontSize: '1.125rem', fontWeight: 500 }}>Here's what's happening with your store today.</p>
               </div>
-              <button className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                <div className="relative flex items-center space-x-2">
-                  <FileText className="w-4 h-4 group-hover:rotate-3 transition-transform duration-300" />
-                  <span>Generate Report</span>
-                  <Sparkles className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
-                </div>
-              </button>
+              <GenerateReportButton chartRef={chartRef} />
             </div>
 
             {/* Upper Section - Now with exact design from first file */}
@@ -330,24 +361,27 @@ const page = () => {
                 </div>
 
                 {/* Chart Below */}
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6 text-center">Units sold</h3>
+                <div
+                  ref={chartRef}
+                  style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', marginTop: '1.5rem' }}
+                >
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '1.5rem', textAlign: 'center' }}>Units sold</h3>
                   
                   {/* Chart */}
-                  <div className="relative h-80">
+                  <div style={{ position: 'relative', height: '20rem' }}>
                     {/* Y-axis labels */}
-                    <div className="absolute left-0 top-0 text-xs text-gray-400">350</div>
-                    <div className="absolute left-0 top-1/4 text-xs text-gray-400">300</div>
-                    <div className="absolute left-0 top-2/4 text-xs text-gray-400">250</div>
-                    <div className="absolute left-0 top-3/4 text-xs text-gray-400">200</div>
-                    <div className="absolute left-0 bottom-8 text-xs text-gray-400">150</div>
-                    <div className="absolute left-0 bottom-4 text-xs text-gray-400">100</div>
-                    <div className="absolute left-0 bottom-0 text-xs text-gray-400">50</div>
-                    <div className="absolute left-0 -bottom-4 text-xs text-gray-400">0</div>
+                    <div style={{ position: 'absolute', left: 0, top: 0, fontSize: '0.75rem', color: '#9ca3af' }}>350</div>
+                    <div style={{ position: 'absolute', left: 0, top: '25%', fontSize: '0.75rem', color: '#9ca3af' }}>300</div>
+                    <div style={{ position: 'absolute', left: 0, top: '50%', fontSize: '0.75rem', color: '#9ca3af' }}>250</div>
+                    <div style={{ position: 'absolute', left: 0, top: '75%', fontSize: '0.75rem', color: '#9ca3af' }}>200</div>
+                    <div style={{ position: 'absolute', left: 0, bottom: '8rem', fontSize: '0.75rem', color: '#9ca3af' }}>150</div>
+                    <div style={{ position: 'absolute', left: 0, bottom: '4rem', fontSize: '0.75rem', color: '#9ca3af' }}>100</div>
+                    <div style={{ position: 'absolute', left: 0, bottom: 0, fontSize: '0.75rem', color: '#9ca3af' }}>50</div>
+                    <div style={{ position: 'absolute', left: 0, bottom: '-1rem', fontSize: '0.75rem', color: '#9ca3af' }}>0</div>
 
                     {/* Chart area */}
-                    <div className="ml-8 mr-4 h-72 relative">
-                      <svg className="w-full h-full" viewBox="0 0 400 280">
+                    <div style={{ marginLeft: '2rem', marginRight: '1rem', height: '18rem', position: 'relative' }}>
+                      <svg style={{ width: '100%', height: '100%' }} viewBox="0 0 400 280">
                         {/* Grid lines */}
                         <defs>
                           <pattern id="grid" width="57" height="40" patternUnits="userSpaceOnUse">
@@ -392,9 +426,9 @@ const page = () => {
                     </div>
 
                     {/* X-axis labels */}
-                    <div className="flex justify-between mt-2 ml-8 mr-4">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', marginLeft: '2rem', marginRight: '1rem' }}>
                       {chartData.map((point, index) => (
-                        <span key={index} className="text-xs text-gray-400">{point.month}</span>
+                        <span key={index} style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{point.month}</span>
                       ))}
                     </div>
                   </div>
