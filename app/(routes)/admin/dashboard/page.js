@@ -1,5 +1,5 @@
 import React from 'react'
-import Sidebar from '../../../components/sidebar'
+import Sidebar from '../../../../components/sidebar'
 import { Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw, CheckCircle, Tag, Sparkles, FileText } from 'lucide-react'
 
 const page = () => {
