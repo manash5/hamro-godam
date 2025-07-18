@@ -247,6 +247,8 @@ const TaskAssignmentPage = () => {
               <div className="flex items-center justify-between mt-4">
                 {task.status === 'pending' ? (
                   <span className="inline-block px-4 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200 shadow-sm">Pending</span>
+                ) : task.status === 'completed' ? (
+                  <span className="inline-block px-4 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 shadow-sm">Complete</span>
                 ) : (
                   <select
                     value={task.status}

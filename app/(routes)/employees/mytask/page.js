@@ -26,13 +26,26 @@ export default function EmployeeTaskSection() {
       .catch(() => setLoading(false));
   }, [employeeId]);
 
-  const toggleTaskStatus = (taskId) => {
-    setTasks(tasks.map(task => 
-      task._id === taskId 
-        ? { ...task, status: task.status === 'pending' ? 'completed' : 'pending' }
-        : task
-    ));
-    // Optionally, send a PUT request to update status in backend
+  const toggleTaskStatus = async (taskId) => {
+    const task = tasks.find(t => t._id === taskId);
+    if (!task) return;
+    const newStatus = task.status === 'pending' ? 'completed' : 'pending';
+    try {
+      const res = await fetch(`/api/task/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        setTasks(tasks.map(t =>
+          t._id === taskId ? { ...t, status: newStatus } : t
+        ));
+      } else {
+        alert('Failed to update task status.');
+      }
+    } catch (error) {
+      alert('Failed to update task status.');
+    }
   };
 
   const getPriorityColor = (priority) => {
