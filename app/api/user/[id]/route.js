@@ -4,8 +4,9 @@ import { User } from '@/models/user/user';
 import bcrypt from 'bcryptjs';
 
 // GET user by ID
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
+    const params = await context.params;
     const { id } = params;
     await connectToDB();
     const user = await User.findById(id);

@@ -56,11 +56,16 @@ export async function GET(request) {
     
     let query = { user: userId };
     
-    // If date range is provided, filter events
+    // If date range is provided, filter events that overlap the range
     if (startDate && endDate) {
-      query.start = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
+      query = {
+        user: userId,
+        $or: [
+          {
+            start: { $lte: new Date(endDate) },
+            end: { $gte: new Date(startDate) }
+          }
+        ]
       };
     }
     
