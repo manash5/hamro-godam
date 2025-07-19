@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Search, ChevronDown, X } from "lucide-react";
 
-export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }) {
+export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, showDiscountOption = false, previousOrderCount = 0, onCustomerChange }) {
   const [orderData, setOrderData] = useState({
     customerName: "",
     customerNumber: "",
@@ -21,12 +21,16 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
   const [searchTerm, setSearchTerm] = useState("");
   const [showProductDropdown, setShowProductDropdown] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [discountApplied, setDiscountApplied] = useState(false);
 
   // Fetch products from database
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/product');
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/product', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
         const data = await res.json();
         if (res.ok && data.data) {
           setProducts(data.data);
@@ -109,6 +113,14 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
     };
   }, [showProductDropdown]);
 
+  // Call onCustomerChange when customer name or number changes
+  useEffect(() => {
+    if (onCustomerChange) {
+      onCustomerChange(orderData.customerName, orderData.customerNumber);
+    }
+    // eslint-disable-next-line
+  }, [orderData.customerName, orderData.customerNumber]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setOrderData((prev) => ({ ...prev, [name]: value }));
@@ -162,9 +174,13 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
   };
 
   const calculateTotal = () => {
-    return orderData.products.reduce((sum, product) => {
+    const total = orderData.products.reduce((sum, product) => {
       return sum + (product.price * product.quantity);
     }, 0);
+    if (discountApplied && showDiscountOption) {
+      return Math.round(total * 0.9 * 100) / 100; // 10% off, rounded to 2 decimals
+    }
+    return total;
   };
 
   const handleSubmit = () => {
@@ -333,6 +349,32 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
                     </span>
                   </div>
                 </div>
+                {/* Discount Option for Repeat Customers */}
+                {showDiscountOption && (
+                  <div className="mt-4 p-4 rounded-lg border border-blue-300 bg-blue-50 flex flex-col gap-2 animate-fade-in">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-700 font-semibold text-base">🎉 Loyal Customer Bonus!</span>
+                      <span className="text-xs text-blue-500 bg-blue-100 rounded px-2 py-0.5">{previousOrderCount} previous orders</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-gray-700">Apply <b>10% discount</b> for this order?</span>
+                      <button
+                        className={`transition px-4 py-2 rounded-lg font-semibold text-sm shadow-sm focus:outline-none ${discountApplied ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-white border border-blue-400 text-blue-700 hover:bg-blue-100'}`}
+                        onClick={() => setDiscountApplied((prev) => !prev)}
+                        type="button"
+                      >
+                        {discountApplied ? 'Discount Applied' : 'Apply Discount'}
+                      </button>
+                    </div>
+                    {discountApplied && (
+                      <div className="text-green-700 text-sm mt-2 font-medium flex items-center gap-2">
+                        <span>Discounted Price:</span>
+                        <span className="text-lg font-bold">${(orderData.products.reduce((sum, product) => sum + (product.price * product.quantity), 0) * 0.9).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        <span className="line-through text-gray-400 text-base">${orderData.products.reduce((sum, product) => sum + (product.price * product.quantity), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -347,7 +389,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
                     <input 
                       name="customerName" 
                       value={orderData.customerName} 
-                      onChange={handleChange} 
+                      onChange={e => { handleChange(e); if (onCustomerChange) onCustomerChange(e.target.value, orderData.customerNumber); }}
                       placeholder="John Doe" 
                       className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -369,7 +411,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder }
                     <input 
                       name="customerNumber" 
                       value={orderData.customerNumber} 
-                      onChange={handleChange} 
+                      onChange={e => { handleChange(e); if (onCustomerChange) onCustomerChange(orderData.customerName, e.target.value); }}
                       placeholder="+1 (555) 123-4567" 
                       className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />

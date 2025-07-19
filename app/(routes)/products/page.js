@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Search, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
-
-import Sidebar from '../../../components/sidebar'
+import Sidebar from '../../../components/sidebar';
+import AuthGuard from '@/components/AuthGuard';
+import TokenManager from '@/utils/tokenManager';
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,6 +13,18 @@ export default function ProductsPage() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+  const [suppliers, setSuppliers] = useState([]);
+  const [supplierLoading, setSupplierLoading] = useState(false);
+  const [showNewSupplierForm, setShowNewSupplierForm] = useState(false);
+  const [newSupplier, setNewSupplier] = useState({
+    name: '',
+    email: '',
+    contact_number: '',
+    address: '',
+    category: '',
+    company_name: '',
+  });
+  const [addingSupplier, setAddingSupplier] = useState(false);
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
@@ -19,10 +32,12 @@ export default function ProductsPage() {
     stockQuantity: '',
     category: '',
     image: '',
+    supplier: '', 
     variations: [
       { type: 'Color', options: ['Black', 'White', 'Blue'], status: 'ACTIVE' }
     ]
   });
+  const [formError, setFormError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -34,7 +49,10 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      const res = await fetch('/api/product');
+      const token = TokenManager.getToken(false);
+      const res = await fetch('/api/product', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
       const data = await res.json();
       if (res.ok && data.data) {
         setProducts(data.data);
@@ -52,6 +70,32 @@ export default function ProductsPage() {
     // Initial fetch only
     fetchProducts();
   }, []);
+
+  // 2. Fetch suppliers when Add Product modal opens
+  useEffect(() => {
+    if (showAddProductModal) {
+      const fetchSuppliers = async () => {
+        setSupplierLoading(true);
+        try {
+          const token = TokenManager.getToken(false);
+          const res = await fetch('/api/supplier', {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          });
+          const data = await res.json();
+          if (res && data.data) {
+            setSuppliers(data.data);
+          } else {
+            setSuppliers([]);
+          }
+        } catch (err) {
+          setSuppliers([]);
+        } finally {
+          setSupplierLoading(false);
+        }
+      };
+      fetchSuppliers();
+    }
+  }, [showAddProductModal]);
 
   // Function to determine status based on stock level
   const getProductStatus = (stock) => {
@@ -108,9 +152,11 @@ export default function ProductsPage() {
     const formData = new FormData();
     formData.append('image', file); // <-- field name must be 'image' for upload/route.js
     try {
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/upload', { // <-- use /api/upload
         method: 'POST',
         body: formData,
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       const data = await res.json();
       if (res.ok && data.path) {
@@ -125,26 +171,75 @@ export default function ProductsPage() {
     }
   };
 
+  // 4. Add handler for selecting suppliers
+  const handleSupplierSelect = (e) => {
+    setProductForm(prev => ({ ...prev, supplier: e.target.value }));
+  };
+  // 5. Add handler for new supplier form
+  const handleNewSupplierChange = (e) => {
+    const { name, value } = e.target;
+    setNewSupplier(prev => ({ ...prev, [name]: value }));
+  };
+  const handleAddNewSupplier = async () => {
+    setAddingSupplier(true);
+    try {
+      const token = TokenManager.getToken(false);
+      const res = await fetch('/api/supplier', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(newSupplier),
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setSuppliers(prev => [data.data, ...prev]);
+        setProductForm(prev => ({ ...prev, suppliers: [data.data.id, ...prev.suppliers] }));
+        setShowNewSupplierForm(false);
+        setNewSupplier({
+          name: '', email: '', contact_number: '', address: '', category: '', company_name: '',
+        });
+      } else {
+        alert('Failed to add supplier: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error adding supplier: ' + err.message);
+    } finally {
+      setAddingSupplier(false);
+    }
+  };
+
+  // 6. Update handleFormSubmit to include suppliers
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
+    if (!productForm.supplier) {
+      setFormError('Please select a supplier for this product.');
+      return;
+    }
     try {
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/product', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           name: productForm.name,
           description: productForm.description,
           stock: Number(productForm.stockQuantity),
           price: Number(productForm.price),
           category: productForm.category,
-          image: productForm.image || '', // Ensure image is sent
-          status: productForm.status ?? true, // Default to available if not set
+          image: productForm.image || '',
+          status: productForm.status ?? true,
+          supplier: productForm.supplier, // <-- single supplier
         }),
       });
       const result = await res.json();
       if (res.ok) {
         setShowAddProductModal(false);
-        // Reset form fields after save
         setProductForm({
           name: '',
           description: '',
@@ -152,11 +247,11 @@ export default function ProductsPage() {
           stockQuantity: '',
           category: '',
           image: '',
+          supplier: '',
           variations: [
             { type: 'Color', options: ['Black', 'White', 'Blue'], status: 'ACTIVE' }
           ]
         });
-        // Reload the table to show the new product
         fetchProducts();
       } else {
         alert('Failed to save product: ' + result.error);
@@ -169,9 +264,13 @@ export default function ProductsPage() {
   const handleEditProduct = async (e) => {
     e.preventDefault();
     try {
+      const token = TokenManager.getToken(false);
       const res = await fetch(`/api/product/${editProduct.id || editProduct._id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           name: productForm.name,
           description: productForm.description,
@@ -210,8 +309,10 @@ export default function ProductsPage() {
 
   const handleDeleteProduct = async (productId) => {
     try {
+      const token = TokenManager.getToken(false);
       const res = await fetch(`/api/product/${productId}`, {
         method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
 
       if (res.ok) {
@@ -291,10 +392,11 @@ export default function ProductsPage() {
   }, [dropdownOpen]);
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto bg-slate-100 pt-10">
+    <AuthGuard requireAuth={true} isEmployeeRoute={false}>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto bg-slate-100 pt-10">
         {/* Header */}
         <div className="bg-slate-100 border-b border-gray-100 px-6 py-4 rounded-xl mb-5 mx-5">
           <div className="flex items-center justify-between">
@@ -625,84 +727,65 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* Product Variations */}
+              {/* Suppliers Section */}
               <div className="bg-orange-50 p-6 rounded-xl">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-orange-600 text-white rounded-lg flex items-center justify-center text-sm font-bold">
-                      🎨
+                      🏢
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Product Variations</h3>
-                      <p className="text-sm text-gray-600">Define product variants and options</p>
+                      <h3 className="text-lg font-semibold text-gray-900">Suppliers</h3>
+                      <p className="text-sm text-gray-600">Select or add suppliers for this product</p>
                     </div>
                   </div>
                   <button
                     type="button"
-                    onClick={addNewVariation}
+                    onClick={() => setShowNewSupplierForm(v => !v)}
                     className="px-4 py-2 border-2 border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-200 flex items-center gap-2"
                   >
                     <Plus size={16} />
-                    Add New Variation
+                    {showNewSupplierForm ? 'Cancel' : 'Add New Supplier'}
                   </button>
                 </div>
-                
-                <div className="space-y-4">
-                  {/* Header */}
-                  <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700 border-b pb-2">
-                    <div className="col-span-3">Variation Type</div>
-                    <div className="col-span-4">Options</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-3">Actions</div>
-                  </div>
-                  
-                  {/* Variations */}
-                  {productForm.variations.map((variation, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                          <select
-                            value={variation.type}
-                            onChange={(e) => updateVariation(index, 'type', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            <option value="Color">Color</option>
-                            <option value="Size">Size</option>
-                            <option value="Material">Material</option>
-                          </select>
-                        </div>
-                      </div>
-                      
-                      <div className="col-span-4">
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                          <span className="ml-2 text-sm text-gray-600">
-                            {variation.options.join(', ')}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="col-span-2">
-                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full border border-green-200">
-                          {variation.status}
-                        </span>
-                      </div>
-                      
-                      <div className="col-span-3">
-                        <button
-                          type="button"
-                          onClick={() => removeVariation(index)}
-                          className="w-6 h-6 bg-red-100 hover:bg-red-200 text-red-600 rounded-full flex items-center justify-center text-sm transition-colors duration-200"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                {/* Existing Suppliers Multi-Select */}
+                <div className="mb-4">
+                  {supplierLoading ? (
+                    <p className="text-gray-500 text-sm">Loading suppliers...</p>
+                  ) : (
+                    <select
+                      value={productForm.supplier}
+                      onChange={handleSupplierSelect}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Select a supplier</option>
+                      {suppliers.map(supplier => (
+                        <option key={supplier.id} value={supplier.id}>
+                          {supplier.name} ({supplier.company_name || 'No Company'})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {formError && <p className="text-red-600 text-xs mt-1">{formError}</p>}
+                  <p className="text-xs text-gray-500 mt-1">You must select a supplier for this product.</p>
                 </div>
+                {/* New Supplier Form */}
+                {showNewSupplierForm && (
+                  <div className="space-y-2 bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <input name="name" value={newSupplier.name} onChange={handleNewSupplierChange} required placeholder="Name*" className="px-3 py-2 border rounded" />
+                      <input name="email" value={newSupplier.email} onChange={handleNewSupplierChange} required placeholder="Email*" className="px-3 py-2 border rounded" />
+                      <input name="contact_number" value={newSupplier.contact_number} onChange={handleNewSupplierChange} required placeholder="Contact Number*" className="px-3 py-2 border rounded" />
+                      <input name="address" value={newSupplier.address} onChange={handleNewSupplierChange} placeholder="Address" className="px-3 py-2 border rounded" />
+                      <input name="category" value={newSupplier.category} onChange={handleNewSupplierChange} required placeholder="Category*" className="px-3 py-2 border rounded" />
+                      <input name="company_name" value={newSupplier.company_name} onChange={handleNewSupplierChange} placeholder="Company Name" className="px-3 py-2 border rounded" />
+                    </div>
+                    <button type="button" disabled={addingSupplier} onClick={handleAddNewSupplier} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">
+                      {addingSupplier ? 'Adding...' : 'Add Supplier'}
+                    </button>
+                  </div>
+                )}
               </div>
             </form>
           </div>
@@ -953,6 +1036,7 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

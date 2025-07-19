@@ -1,8 +1,7 @@
-// middleware.js
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-const secretKey = process.env.secretKey; // Ensure this matches your env variable name
+const secretKey = process.env.secretKey; 
 
 export async function middleware(request) {
   // Skip middleware for login/register routes
@@ -25,7 +24,6 @@ export async function middleware(request) {
     // Verify token
     const decoded = jwt.verify(token, secretKey);
     const response = NextResponse.next();
-    // Attach user data to request (optional, requires advanced setup)
     return response;
   } catch (err) {
     return new NextResponse(
@@ -34,4 +32,8 @@ export async function middleware(request) {
     );
   }
 }
+
+export const config = {
+  matcher: ['/api/:path*'],
+};
 

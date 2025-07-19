@@ -1,4 +1,3 @@
-import { number } from 'framer-motion';
 import mongoose from 'mongoose';
 
 const employeeSchema = new mongoose.Schema({
@@ -23,6 +22,9 @@ const employeeSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+  }, 
+  salary: {
+    type: Number,
   }
 }, {
   timestamps: true,

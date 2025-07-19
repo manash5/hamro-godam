@@ -1,9 +1,14 @@
 import { HamroGodamWelcomeEmail } from '@/components/EmailTemplate'
 import { Resend } from 'resend';
+import { verifyToken } from '@/utils/auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function GET(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return Response.json({ message }, { status: 401 });
+  }
   try {
     const data = await resend.emails.send({
       from: 'HamroGodam <welcome@resend.dev>',
@@ -24,6 +29,10 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return Response.json({ message }, { status: 401 });
+  }
   try {
     const body = await request.json();
     const data = await resend.emails.send({

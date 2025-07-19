@@ -1,65 +1,187 @@
-import React from 'react'
+"use client"
+import React, { useRef, useEffect, useState } from 'react'
 import Sidebar from '../../../components/sidebar'
 import { Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw, CheckCircle, Tag, Sparkles, FileText } from 'lucide-react'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import GenerateReportButton from '../../../components/GenerateReportButton';
+import TokenManager from '@/utils/tokenManager';
+import AuthGuard from '@/components/AuthGuard';
 
 const page = () => {
+  const dashboardRef = useRef(null);
+  const chartRef = useRef(null);
 
-  const products = [
-    {
-      id: 1,
-      name: "Yew Plum Pine",
-      price: "$197.27",
-      rating: 4,
-      sold: "98k",
-      image: "👟", // Using emoji as placeholder
-      color: "blue"
-    },
-    {
-      id: 2,
-      name: "Yew Plum Pine",
-      price: "$177.20",
-      rating: 3,
-      sold: "90k",
-      image: "👟",
-      color: "black"
-    },
-    {
-      id: 3,
-      name: "Yew Plum Pine",
-      price: "$168.72",
-      rating: 4,
-      sold: "88k",
-      image: "👟",
-      color: "red"
-    },
-    {
-      id: 4,
-      name: "Yew Plum Pine",
-      price: "$154.26",
-      rating: 3,
-      sold: "76k",
-      image: "👟",
-      color: "black"
-    },
-    {
-      id: 5,
-      name: "Yew Plum Pine",
-      price: "$127.27",
-      rating: 3,
-      sold: "70k",
-      image: "👟",
-      color: "purple"
-    },
-    {
-      id: 6,
-      name: "Yew Plum Pine",
-      price: "$105.79",
-      rating: 4,
-      sold: "65k",
-      image: "👟",
-      color: "black"
+  // State for backend data
+  const [userName, setUserName] = useState('User');
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [popularProducts, setPopularProducts] = useState([]);
+  const [customerCount, setCustomerCount] = useState(0);
+  const [productCount, setProductCount] = useState(0);
+  const [salesCount, setSalesCount] = useState(0);
+  const [duesCount, setDuesCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [graphData, setGraphData] = useState([]);
+  const [salesAmount, setSalesAmount] = useState(0);
+  const [discountCount, setDiscountCount] = useState(0);
+
+  // Helper: get token from TokenManager
+  const getToken = () => {
+    return TokenManager.getToken(false);
+  };
+
+  // Helper: get employeeId from token (decode JWT)
+  const getEmployeeIdFromToken = () => {
+    const token = getToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.employeeId || payload.userId || payload.id || null;
+    } catch {
+      return null;
     }
-  ];
+  };
+
+  // Fetch user name and store in localStorage
+  useEffect(() => {
+    const fetchUserName = async () => {
+      // Check for admin data first (since this is admin dashboard)
+      let name = localStorage.getItem('admin');
+      if (name) {
+        setUserName(name);
+        return;
+      }
+      
+      // If no admin data, try to fetch from API
+      const token = getToken();
+      const employeeId = getEmployeeIdFromToken();
+      if (!token || !employeeId) return;
+      try {
+        const res = await fetch(`/api/employee/${employeeId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          name = data.data?.name || 'User';
+          setUserName(name);
+          localStorage.setItem('admin', name);
+          // Also store email if available
+          if (data.data?.email) {
+            localStorage.setItem('adminEmail', data.data.email);
+          }
+        }
+      } catch {}
+    };
+    fetchUserName();
+  }, []);
+
+  // Add event listener to refresh user data when localStorage changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'admin') {
+        setUserName(e.newValue || 'User');
+      }
+    };
+
+    // Also check for user changes on focus (in case localStorage was updated in another tab)
+    const handleFocus = () => {
+      const name = localStorage.getItem('admin');
+      if (name && name !== userName) {
+        setUserName(name);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [userName]);
+
+  // Fetch products and orders, then aggregate dashboard data
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = getToken();
+      if (!token) return;
+      // Fetch products
+      const prodRes = await fetch('/api/product', { headers: { 'Authorization': `Bearer ${token}` } });
+      const prodData = prodRes.ok ? (await prodRes.json()).data : [];
+      setProducts(prodData);
+      setProductCount(prodData.length);
+      // Fetch orders
+      const orderRes = await fetch('/api/order', { headers: { 'Authorization': `Bearer ${token}` } });
+      const orderData = orderRes.ok ? (await orderRes.json()).data : [];
+      setOrders(orderData);
+      // --- Aggregations ---
+      // Popular products (by total quantity ordered)
+      const productOrderMap = {};
+      orderData.forEach(order => {
+        (order.productName || []).forEach((name, idx) => {
+          const qty = order.productQuantity?.[idx] || 0;
+          if (!productOrderMap[name]) productOrderMap[name] = 0;
+          productOrderMap[name] += qty;
+        });
+      });
+      const sortedPopular = Object.entries(productOrderMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, qty]) => {
+          const prod = prodData.find(p => p.name === name) || {};
+          return {
+            name,
+            qty,
+            price: prod.price ? `$${prod.price}` : '-',
+            image: '👟', // Placeholder, replace with prod.image if available
+            color: prod.color || 'blue',
+            rating: 4, // Placeholder, could be dynamic if available
+            sold: qty + 'x',
+          };
+        });
+      setPopularProducts(sortedPopular);
+      // Unique customers
+      const uniqueCustomers = new Set(orderData.map(o => `${o.customerName}|${o.customerNumber}`));
+      setCustomerCount(uniqueCustomers.size);
+      // Sales (delivered orders)
+      setSalesCount(orderData.filter(o => o.status === 'delivered').length);
+      // Dues (pending orders)
+      setDuesCount(orderData.filter(o => o.status === 'pending').length);
+      // Pending (shipped orders)
+      setPendingCount(orderData.filter(o => o.status === 'shipped').length);
+      // Graph data (sales per month)
+      const salesByMonth = {};
+      orderData.forEach(order => {
+        if (order.status === 'delivered') {
+          const date = new Date(order.createdAt);
+          const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          salesByMonth[month] = (salesByMonth[month] || 0) + 1;
+        }
+      });
+      setGraphData(Object.entries(salesByMonth).map(([month, count]) => ({ month, count })));
+      // Sales Amount (sum of totalAmount for delivered orders)
+      const salesAmt = orderData.filter(o => o.status === 'delivered').reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      setSalesAmount(salesAmt);
+      // Discount: sum of 10% of the totalAmount of the sixth order for each customer with >5 orders
+      const ordersByCustomer = {};
+      orderData.forEach(o => {
+        if (!ordersByCustomer[o.customerName]) ordersByCustomer[o.customerName] = [];
+        ordersByCustomer[o.customerName].push(o);
+      });
+      let discountSum = 0;
+      Object.values(ordersByCustomer).forEach(orderList => {
+        if (orderList.length > 5) {
+          // Sort by createdAt ascending
+          orderList.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+          const sixthOrder = orderList[5];
+          if (sixthOrder && sixthOrder.totalAmount) {
+            discountSum += sixthOrder.totalAmount * 0.10;
+          }
+        }
+      });
+      setDiscountCount(discountSum);
+    };
+    fetchData();
+  }, []);
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, index) => (
@@ -115,31 +237,56 @@ const page = () => {
 
   const maxValue = 350;
 
+  // Function to generate analysis text
+  const generateAnalysis = () => {
+    const totalCustomers = 30567;
+    const totalProducts = 3037;
+    const totalSales = 20509;
+    const salesChange = '+33%';
+    const totalRefunds = 21647;
+    const refundsChange = '-12%';
+    const mostPopularProduct = products.reduce((max, p) => (parseInt(p.sold) > parseInt(max.sold) ? p : max), products[0]);
+    const highestSalesMonth = chartData.reduce((max, d) => (d.blue > max.blue ? d : max), chartData[0]);
+
+    return (
+      `Dashboard Analysis Report\n\n` +
+      `- Total Customers: ${totalCustomers}\n` +
+      `- Total Products: ${totalProducts}\n` +
+      `- Total Sales: ${totalSales} (${salesChange})\n` +
+      `- Total Refunds: ${totalRefunds} (${refundsChange})\n` +
+      `- Most Popular Product: ${mostPopularProduct.name} (${mostPopularProduct.sold} sold)\n` +
+      `- Highest Sales Month: ${highestSalesMonth.month} (${highestSalesMonth.blue} units)\n`
+    );
+  };
+
   return (
-    <>
-      <div className="flex min-h-screen bg-slate-100">
+    <AuthGuard requireAuth={true} isEmployeeRoute={false}>
+      <div
+        className="flex min-h-screen"
+        style={{ backgroundColor: '#f1f5f9' }}
+      >
         <Sidebar />
-        <div className="flex-1 p-6 overflow-y-auto max-h-screen hide-scrollbar">
-          <div className="max-w-[1800px] mx-auto space-y-6 pb-6">
-            {/* Welcome Section (unchanged from your second file) */}    
+        <div
+          className="flex-1 p-6 overflow-y-auto max-h-screen hide-scrollbar"
+          style={{ backgroundColor: '#f1f5f9' }}
+        >
+          <div
+            className="max-w-[1800px] mx-auto space-y-6 pb-6"
+            ref={dashboardRef}
+            style={{ backgroundColor: '#f1f5f9' }}
+          >
+            {/* Welcome Section */}
             <div className="relative my-5 flex justify-between items-center">
               <div className="mb-6">
                 <div className="flex items-center mb-3">
-                  <div className="w-1.5 h-10 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full mr-4"></div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 bg-clip-text text-transparent">
-                    Welcome back, User!
+                  <div style={{ width: '0.375rem', height: '2.5rem', background: 'linear-gradient(to bottom, #6366f1, #a21caf)', borderRadius: '9999px', marginRight: '1rem' }}></div>
+                  <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', background: 'linear-gradient(to right, #1f2937, #374151, #4b5563)', WebkitBackgroundClip: 'text', color: 'transparent' }}>
+                    Welcome back, {userName}!
                   </h1>
                 </div>
-                <p className="text-gray-500 ml-6 text-lg font-medium">Here's what's happening with your store today.</p>
+                <p style={{ color: '#6b7280', marginLeft: '1.5rem', fontSize: '1.125rem', fontWeight: 500 }}>Here's what's happening with your store today.</p>
               </div>
-              <button className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                <div className="relative flex items-center space-x-2">
-                  <FileText className="w-4 h-4 group-hover:rotate-3 transition-transform duration-300" />
-                  <span>Generate Report</span>
-                  <Sparkles className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
-                </div>
-              </button>
+              <GenerateReportButton chartRef={chartRef} />
             </div>
 
             {/* Upper Section - Now with exact design from first file */}
@@ -150,8 +297,8 @@ const page = () => {
                   <h2 className="text-xl font-bold text-gray-900 mb-6">Popular Products</h2>
                   
                   <div className="space-y-4">
-                    {products.map((product) => (
-                      <div key={product.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    {popularProducts.map((product) => (
+                      <div key={product.name} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                         <div className="flex items-center space-x-4">
                           <div className="text-2xl">{product.image}</div>
                           <div>
@@ -192,10 +339,10 @@ const page = () => {
                         <Users className="w-6 h-6 text-cyan-600" />
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">30,567</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{customerCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Customers</span>
-                      <span className="text-red-500 text-sm font-medium">-5%</span>
+                      {/* Removed percentage change */}
                     </div>
                   </div>
 
@@ -206,10 +353,10 @@ const page = () => {
                         <Package className="w-6 h-6 text-yellow-600" />
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">3,037</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{productCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Products</span>
-                      <span className="text-green-500 text-sm font-medium">+18%</span>
+                      {/* Removed percentage change */}
                     </div>
                   </div>
 
@@ -220,10 +367,10 @@ const page = () => {
                         <TrendingUp className="w-6 h-6 text-red-600" />
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">205,09</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{salesCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Sales</span>
-                      <span className="text-green-500 text-sm font-medium">+33%</span>
+                      {/* Removed percentage change */}
                     </div>
                   </div>
 
@@ -234,10 +381,10 @@ const page = () => {
                         <RefreshCw className="w-6 h-6 text-green-600" />
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">21,647</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{duesCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Refunds</span>
-                      <span className="text-red-500 text-sm font-medium">-12%</span>
+                      {/* Removed percentage change */}
                     </div>
                   </div>
                 </div>
@@ -262,26 +409,14 @@ const page = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700">Dues</span>
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg font-semibold text-gray-900">230.0</span>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
-                              <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
-                            </svg>
-                            <span className="text-sm text-green-500">+124%</span>
-                          </div>
+                          <span className="text-lg font-semibold text-gray-900">{duesCount}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700">Pending Orders</span>
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg font-semibold text-gray-900">102</span>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
-                              <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
-                            </svg>
-                            <span className="text-sm text-red-500">-56%</span>
-                          </div>
+                          <span className="text-lg font-semibold text-gray-900">{pendingCount}</span>
                         </div>
                       </div>
                     </div>
@@ -303,26 +438,14 @@ const page = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700">Sales</span>
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg font-semibold text-gray-900">1000.0</span>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
-                              <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
-                            </svg>
-                            <span className="text-sm text-green-500">+24%</span>
-                          </div>
+                          <span className="text-lg font-semibold text-gray-900">{salesAmount}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700">Discount</span>
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg font-semibold text-gray-900">210.00</span>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
-                              <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
-                            </svg>
-                            <span className="text-sm text-red-500">-12%</span>
-                          </div>
+                          <span className="text-lg font-semibold text-gray-900">{discountCount.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -330,24 +453,27 @@ const page = () => {
                 </div>
 
                 {/* Chart Below */}
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6 text-center">Units sold</h3>
+                <div
+                  ref={chartRef}
+                  style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', marginTop: '1.5rem' }}
+                >
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '1.5rem', textAlign: 'center' }}>Units sold</h3>
                   
                   {/* Chart */}
-                  <div className="relative h-80">
+                  <div style={{ position: 'relative', height: '20rem' }}>
                     {/* Y-axis labels */}
-                    <div className="absolute left-0 top-0 text-xs text-gray-400">350</div>
-                    <div className="absolute left-0 top-1/4 text-xs text-gray-400">300</div>
-                    <div className="absolute left-0 top-2/4 text-xs text-gray-400">250</div>
-                    <div className="absolute left-0 top-3/4 text-xs text-gray-400">200</div>
-                    <div className="absolute left-0 bottom-8 text-xs text-gray-400">150</div>
-                    <div className="absolute left-0 bottom-4 text-xs text-gray-400">100</div>
-                    <div className="absolute left-0 bottom-0 text-xs text-gray-400">50</div>
-                    <div className="absolute left-0 -bottom-4 text-xs text-gray-400">0</div>
+                    <div style={{ position: 'absolute', left: 0, top: 0, fontSize: '0.75rem', color: '#9ca3af' }}>350</div>
+                    <div style={{ position: 'absolute', left: 0, top: '25%', fontSize: '0.75rem', color: '#9ca3af' }}>300</div>
+                    <div style={{ position: 'absolute', left: 0, top: '50%', fontSize: '0.75rem', color: '#9ca3af' }}>250</div>
+                    <div style={{ position: 'absolute', left: 0, top: '75%', fontSize: '0.75rem', color: '#9ca3af' }}>200</div>
+                    <div style={{ position: 'absolute', left: 0, bottom: '8rem', fontSize: '0.75rem', color: '#9ca3af' }}>150</div>
+                    <div style={{ position: 'absolute', left: 0, bottom: '4rem', fontSize: '0.75rem', color: '#9ca3af' }}>100</div>
+                    <div style={{ position: 'absolute', left: 0, bottom: 0, fontSize: '0.75rem', color: '#9ca3af' }}>50</div>
+                    <div style={{ position: 'absolute', left: 0, bottom: '-1rem', fontSize: '0.75rem', color: '#9ca3af' }}>0</div>
 
                     {/* Chart area */}
-                    <div className="ml-8 mr-4 h-72 relative">
-                      <svg className="w-full h-full" viewBox="0 0 400 280">
+                    <div style={{ marginLeft: '2rem', marginRight: '1rem', height: '18rem', position: 'relative' }}>
+                      <svg style={{ width: '100%', height: '100%' }} viewBox="0 0 400 280">
                         {/* Grid lines */}
                         <defs>
                           <pattern id="grid" width="57" height="40" patternUnits="userSpaceOnUse">
@@ -381,20 +507,20 @@ const page = () => {
                         />
                         
                         {/* Data points */}
-                        {chartData.map((point, index) => (
+                        {graphData.map((point, index) => (
                           <g key={index}>
-                            <circle cx={index * 57} cy={280 - (point.blue * 280 / maxValue)} r="4" fill="#3b82f6" />
-                            <circle cx={index * 57} cy={280 - (point.yellow * 280 / maxValue)} r="4" fill="#fbbf24" />
-                            <circle cx={index * 57} cy={280 - (point.green * 280 / maxValue)} r="4" fill="#10b981" />
+                            <circle cx={index * 57} cy={280 - (point.count * 280 / maxValue)} r="4" fill="#3b82f6" />
+                            <circle cx={index * 57} cy={280 - (point.count * 280 / maxValue)} r="4" fill="#fbbf24" />
+                            <circle cx={index * 57} cy={280 - (point.count * 280 / maxValue)} r="4" fill="#10b981" />
                           </g>
                         ))}
                       </svg>
                     </div>
 
                     {/* X-axis labels */}
-                    <div className="flex justify-between mt-2 ml-8 mr-4">
-                      {chartData.map((point, index) => (
-                        <span key={index} className="text-xs text-gray-400">{point.month}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', marginLeft: '2rem', marginRight: '1rem' }}>
+                      {graphData.map((point, index) => (
+                        <span key={index} style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{point.month}</span>
                       ))}
                     </div>
                   </div>
@@ -407,7 +533,7 @@ const page = () => {
           </div>
         </div>
       </div>
-    </>
+    </AuthGuard>
   )
 }
 

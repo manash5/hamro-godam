@@ -41,7 +41,7 @@ const page = () => {
 
   return (
     <>
-      <Navbar name='Login' />
+      <Navbar name='Login' hideButton={false} />
       <div className="min-h-screen bg-slate-200 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-black">
         <div className="max-w-2xl w-full space-y-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">

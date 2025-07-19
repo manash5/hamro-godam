@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { User } from '@/models/user/user'
+import { verifyToken } from '@/utils/auth';
 
 // GET all users
-export async function GET() {
+export async function GET(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     await connectToDB();
     const users = await User.find({});
@@ -21,6 +26,10 @@ export async function GET() {
 
 // POST create new user
 export async function POST(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     const body = await request.json();
     

@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
 import AddOrderModal from '@/components/order/AddOrderModel';
-
-
+import AuthGuard from '@/components/AuthGuard';
+import TokenManager from '@/utils/tokenManager';
 
 export default function OrdersPage() {
   const [editOrder, setEditOrder] = useState(null);
@@ -19,35 +19,40 @@ export default function OrdersPage() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [addOrderCustomerOrderCount, setAddOrderCustomerOrderCount] = useState(0);
+  const [addOrderCustomerName, setAddOrderCustomerName] = useState("");
   const dropdownRefs = useRef({});
 
  
   useEffect(() => {
-  const fetchOrders = async () => {
-    const res = await fetch('/api/order');
-    const data = await res.json();
-    if (res.ok && data.data) {
-      // Map your backend order fields to the frontend table format
-      setOrders(
-        data.data.map((order, idx) => ({
-          id: order._id,
-          customer: order.customerName,
-          phone: order.customerNumber, // This is actually the phone number
-          email: "", // We don't store email in the model
-          date: new Date(order.createdAt).toLocaleDateString(),
-          time: new Date(order.createdAt).toLocaleTimeString(),
-          amount: order.totalAmount,
-          status: order.status.toUpperCase(),
-          items: `${order.productName.length} Items`,
-          itemsDetail: order.productName.join(', '),
-          payment: order.payment || 'Not specified',
-          // Store original data for editing
-          originalData: order,
-        }))
-      );
-    }
-  };
-  fetchOrders(); 
+    const fetchOrders = async () => {
+      const token = TokenManager.getToken(false);
+      const res = await fetch('/api/order', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        // Map your backend order fields to the frontend table format
+        setOrders(
+          data.data.map((order, idx) => ({
+            id: order._id,
+            customer: order.customerName,
+            phone: order.customerNumber, // This is actually the phone number
+            email: "", // We don't store email in the model
+            date: new Date(order.createdAt).toLocaleDateString(),
+            time: new Date(order.createdAt).toLocaleTimeString(),
+            amount: order.totalAmount,
+            status: order.status.toUpperCase(),
+            items: `${order.productName.length} Items`,
+            itemsDetail: order.productName.join(', '),
+            payment: order.payment || 'Not specified',
+            // Store original data for editing
+            originalData: order,
+          }))
+        );
+      }
+    };
+    fetchOrders(); 
   }, []);
 
   // Close dropdown when clicking outside
@@ -106,9 +111,13 @@ export default function OrdersPage() {
 
   const handleSaveOrder = async (orderData) => {
     try {
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(orderData),
       });
       const result = await res.json();
@@ -142,9 +151,13 @@ export default function OrdersPage() {
 
   const handleEditOrder = async (orderData) => {
     try {
+      const token = TokenManager.getToken(false);
       const res = await fetch(`/api/order/${editOrder.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(orderData),
       });
       const result = await res.json();
@@ -179,8 +192,10 @@ export default function OrdersPage() {
 
   const handleDeleteOrder = async (orderId) => {
     try {
+      const token = TokenManager.getToken(false);
       const res = await fetch(`/api/order/${orderId}`, {
         method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
 
       if (res.ok) {
@@ -219,18 +234,35 @@ export default function OrdersPage() {
     }
   };
 
-  return (
-    <div className="flex h-screen bg-slate-100 text-balck">
-      <Sidebar />
+  // Helper to count previous orders for a customer by name or phone
+  const getOrderCountForCustomer = (customerName, customerNumber) => {
+    return orders.filter(
+      (order) =>
+        (customerName && order.customer === customerName) ||
+        (customerNumber && order.phone === customerNumber)
+    ).length;
+  };
 
-      <div className="flex-1 overflow-auto py-10">
+  // When opening Add Order Modal, reset customer order count
+  const handleOpenAddOrderModal = () => {
+    setAddOrderCustomerOrderCount(0);
+    setAddOrderCustomerName("");
+    setShowAddOrderModal(true);
+  };
+
+  return (
+    <AuthGuard requireAuth={true} isEmployeeRoute={false}>
+      <div className="flex h-screen bg-slate-100 text-balck">
+        <Sidebar />
+
+        <div className="flex-1 overflow-auto py-10">
         <div className="bg-slate-100 px-6 py-6 border-b border-gray-100 flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold text-gray-900">Orders</h1>
             <p className="text-sm text-gray-500 mt-1">Track your orders instantly</p>
           </div>
           <button 
-            onClick={() => setShowAddOrderModal(true)}
+            onClick={handleOpenAddOrderModal}
             className="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
             <Plus size={18} /> Add Order
@@ -368,6 +400,14 @@ export default function OrdersPage() {
         isOpen={showAddOrderModal}
         onClose={() => setShowAddOrderModal(false)}
         onSave={handleSaveOrder}
+        showDiscountOption={addOrderCustomerOrderCount > 5}
+        previousOrderCount={addOrderCustomerOrderCount}
+        onCustomerChange={(name, number) => {
+          // Called from modal when customer name/number changes
+          const count = getOrderCountForCustomer(name, number);
+          setAddOrderCustomerOrderCount(count);
+          setAddOrderCustomerName(name);
+        }}
       />
 
       {/* Edit Order Modal */}
@@ -446,6 +486,7 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

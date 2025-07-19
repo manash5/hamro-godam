@@ -59,7 +59,7 @@ const Button = ({ children, variant = 'primary', size = 'md', onClick, className
   );
 };
 
-const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
+const EventModal = ({ isOpen, onClose, event, onSave, onDelete, readOnly = false }) => {
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -74,14 +74,14 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
   useEffect(() => {
     if (event) {
       const formatDateTime = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const dateObj = date instanceof Date ? date : new Date(date);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const hours = String(dateObj.getHours()).padStart(2, '0');
+        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
         return `${year}-${month}-${day}T${hours}:${minutes}`;
       };
-
       setFormData({
         title: event.title || '',
         location: event.location || '',
@@ -144,9 +144,16 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-[600px] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {event?.id ? 'Edit Event' : 'Add Event'}
-          </h2>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {event?.id ? (readOnly ? 'Event Details' : 'Edit Event') : (readOnly ? 'Event Details' : 'Add Event')}
+            </h2>
+            {event?.isRecurring && (
+              <p className="text-sm text-gray-500 mt-1">
+                🔄 This is a recurring event
+              </p>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="text-black hover:text-gray-600"
@@ -161,170 +168,233 @@ const EventModal = ({ isOpen, onClose, event, onSave, onDelete }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Event title"
-              />
+              {readOnly ? (
+                <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.title}</div>
+              ) : (
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Event title"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Event location"
-              />
+              {readOnly ? (
+                <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.location}</div>
+              ) : (
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Event location"
+                />
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Start</label>
-              <input
-                type="datetime-local"
-                name="start"
-                value={formData.start}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {readOnly ? (
+                <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.start.replace('T', ' ')}</div>
+              ) : (
+                <input
+                  type="datetime-local"
+                  name="start"
+                  value={formData.start}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">End</label>
-              <input
-                type="datetime-local"
-                name="end"
-                value={formData.end}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {readOnly ? (
+                <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.end.replace('T', ' ')}</div>
+              ) : (
+                <input
+                  type="datetime-local"
+                  name="end"
+                  value={formData.end}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
             </div>
           </div>
 
           <div className="flex items-center space-x-6">
             <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="allDay"
-                checked={formData.allDay}
-                onChange={handleChange}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
+              {readOnly ? (
+                <input
+                  type="checkbox"
+                  name="allDay"
+                  checked={formData.allDay}
+                  disabled
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              ) : (
+                <input
+                  type="checkbox"
+                  name="allDay"
+                  checked={formData.allDay}
+                  onChange={handleChange}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
               <span className="ml-2 text-sm text-gray-700">All day</span>
             </label>
             <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="timezone"
-                checked={formData.timezone}
-                onChange={handleChange}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
+              {readOnly ? (
+                <input
+                  type="checkbox"
+                  name="timezone"
+                  checked={formData.timezone}
+                  disabled
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              ) : (
+                <input
+                  type="checkbox"
+                  name="timezone"
+                  checked={formData.timezone}
+                  onChange={handleChange}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
               <span className="ml-2 text-sm text-gray-700">Timezone</span>
             </label>
           </div>
 
           <div>
-            <Select
-              name="repeat"
-              value={formData.repeat}
-              label="Repeat"
-              onChange={handleChange}
-              options={[
-                { name: 'Never', value: 'Never' },
-                { name: 'Daily', value: 'Daily' },
-                { name: 'Weekly', value: 'Weekly' },
-                { name: 'Monthly', value: 'Monthly' },
-                { name: 'Yearly', value: 'Yearly' }
-              ]}
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Repeat</label>
+            {readOnly ? (
+              <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md">{formData.repeat}</div>
+            ) : (
+              <Select
+                name="repeat"
+                value={formData.repeat}
+                label={null}
+                onChange={handleChange}
+                options={[
+                  { name: 'Never', value: 'Never' },
+                  { name: 'Daily', value: 'Daily' },
+                  { name: 'Weekly', value: 'Weekly' },
+                  { name: 'Monthly', value: 'Monthly' },
+                  { name: 'Yearly', value: 'Yearly' }
+                ]}
+              />
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Event description"
-            />
+            {readOnly ? (
+              <div className="w-full px-3 py-2 border border-gray-100 bg-gray-100 rounded-md min-h-[80px]">{formData.description}</div>
+            ) : (
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Event description"
+              />
+            )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-6 border-t border-gray-200">
-          <div>
-            {event?.id && (
-              <Button variant="danger" onClick={handleDelete}>
-                DELETE
+        {!readOnly && (
+          <div className="flex items-center justify-between p-6 border-t border-gray-200">
+            <div>
+              {event?.id && (
+                <Button variant="danger" onClick={handleDelete}>
+                  DELETE
+                </Button>
+              )}
+            </div>
+            <div className="flex space-x-3">
+              <Button variant="secondary" onClick={onClose}>
+                CANCEL
               </Button>
-            )}
+              <Button onClick={handleSave}>
+                SAVE
+              </Button>
+            </div>
           </div>
-          <div className="flex space-x-3">
-            <Button variant="secondary" onClick={onClose}>
-              CANCEL
-            </Button>
-            <Button onClick={handleSave}>
-              SAVE
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
 };
 
-export const ContinuousCalendar = ({ onClick }) => {
+export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(today);
   const [view, setView] = useState('week');
   const [selectedDate, setSelectedDate] = useState(today);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: 'Morning Standup',
-      location: 'Conference Room A',
-      start: new Date(2025, 4, 29, 9, 0),
-      end: new Date(2025, 4, 29, 9, 30),
-      color: 'bg-blue-500',
-      description: 'Daily team standup meeting'
-    },
-    {
-      id: 2,
-      title: 'Design Review',
-      location: 'Design Studio',
-      start: new Date(2025, 4, 29, 14, 0),
-      end: new Date(2025, 4, 29, 15, 0),
-      color: 'bg-green-500',
-      description: 'Review latest design mockups'
-    },
-    {
-      id: 3,
-      title: 'Client Meeting',
-      location: 'Zoom',
-      start: new Date(2025, 4, 30, 10, 0),
-      end: new Date(2025, 4, 30, 11, 30),
-      color: 'bg-purple-500',
-      description: 'Quarterly business review with client'
-    },
-    {
-      id: 4,
-      title: 'Team Lunch',
-      location: 'Cafeteria',
-      start: new Date(2025, 4, 30, 12, 30),
-      end: new Date(2025, 4, 30, 13, 30),
-      color: 'bg-orange-500',
-      description: 'Monthly team lunch gathering'
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch events from backend
+  const fetchEvents = async (startDate, endDate) => {
+    setLoading(true);
+    try {
+      const start = startDate.toISOString().split('T')[0];
+      const end = endDate.toISOString().split('T')[0];
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found in localStorage');
+        setLoading(false);
+        return;
+      }
+      const response = await fetch(`/api/event?start=${start}&end=${end}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEvents(data.data || []);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to fetch events:', errorData);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  useEffect(() => {
+    let startDate, endDate;
+    if (view === 'day') {
+      startDate = new Date(currentDate);
+      endDate = new Date(currentDate);
+    } else if (view === 'week') {
+      const startOfWeek = new Date(currentDate);
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      startDate = startOfWeek;
+      endDate = endOfWeek;
+    } else {
+      const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      startDate = firstDay;
+      endDate = lastDay;
+    }
+    fetchEvents(startDate, endDate);
+  }, [currentDate, view]);
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', { 
@@ -376,9 +446,109 @@ export const ContinuousCalendar = ({ onClick }) => {
     return days;
   };
 
+  // Helper function to generate recurring events
+  const generateRecurringEvents = (event, startDate, endDate) => {
+    const recurringEvents = [];
+    const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+    const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+    
+    // If event doesn't repeat, just return the original event if it falls within the date range
+    if (event.repeat === 'Never') {
+      if (eventStart >= startDate && eventStart <= endDate) {
+        recurringEvents.push({
+          ...event,
+          start: eventStart,
+          end: eventEnd,
+          isRecurring: false
+        });
+      }
+      return recurringEvents;
+    }
+    
+    // Calculate the duration of the event
+    const eventDuration = eventEnd.getTime() - eventStart.getTime();
+    
+    // Generate recurring events based on the repeat pattern
+    let currentDate = new Date(eventStart);
+    const maxDate = new Date(endDate);
+    maxDate.setDate(maxDate.getDate() + 1); // Include the end date
+    
+    while (currentDate <= maxDate) {
+      // Check if this occurrence falls within our date range
+      if (currentDate >= startDate && currentDate <= endDate) {
+        const newStart = new Date(currentDate);
+        const newEnd = new Date(currentDate.getTime() + eventDuration);
+        
+        // For all-day events, ensure they span the full day
+        if (event.allDay) {
+          newStart.setHours(0, 0, 0, 0);
+          newEnd.setHours(23, 59, 59, 999);
+        }
+        
+        recurringEvents.push({
+          ...event,
+          start: newStart,
+          end: newEnd,
+          isRecurring: true,
+          originalEventId: event.id
+        });
+      }
+      
+      // Move to the next occurrence based on repeat pattern
+      switch (event.repeat) {
+        case 'Daily':
+          currentDate.setDate(currentDate.getDate() + 1);
+          break;
+        case 'Weekly':
+          currentDate.setDate(currentDate.getDate() + 7);
+          break;
+        case 'Monthly':
+          currentDate.setMonth(currentDate.getMonth() + 1);
+          break;
+        case 'Yearly':
+          currentDate.setFullYear(currentDate.getFullYear() + 1);
+          break;
+        default:
+          return recurringEvents; // Exit if unknown repeat pattern
+      }
+    }
+    
+    return recurringEvents;
+  };
+
   const getEventsForDate = (date) => {
-    return events.filter(event => {
-      return event.start.toDateString() === date.toDateString();
+    // Get the current view's date range to generate recurring events
+    let startDate, endDate;
+    
+    if (view === 'day') {
+      startDate = new Date(date);
+      endDate = new Date(date);
+    } else if (view === 'week') {
+      const startOfWeek = new Date(date);
+      startOfWeek.setDate(date.getDate() - date.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      startDate = startOfWeek;
+      endDate = endOfWeek;
+    } else {
+      // month view
+      const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+      const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      startDate = firstDay;
+      endDate = lastDay;
+    }
+    
+    // Generate all recurring events for the current view
+    const allRecurringEvents = [];
+    events.forEach(event => {
+      const recurringEvents = generateRecurringEvents(event, startDate, endDate);
+      allRecurringEvents.push(...recurringEvents);
+    });
+    
+    // Filter events for the specific date
+    return allRecurringEvents.filter(event => {
+      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+      return eventStart.toDateString() === date.toDateString();
     });
   };
 
@@ -419,6 +589,7 @@ export const ContinuousCalendar = ({ onClick }) => {
   };
 
   const handleAddEvent = () => {
+    if (readOnly) return;
     setSelectedEvent(null);
     setIsModalOpen(true);
   };
@@ -428,20 +599,105 @@ export const ContinuousCalendar = ({ onClick }) => {
     setIsModalOpen(true);
   };
 
-  const handleSaveEvent = (eventData) => {
-    if (eventData.id) {
-      setEvents(prev => prev.map(e => e.id === eventData.id ? eventData : e));
-    } else {
-      const newEvent = {
-        ...eventData,
-        id: Date.now()
-      };
-      setEvents(prev => [...prev, newEvent]);
+  const handleSaveEvent = async (eventData) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found in localStorage');
+        return;
+      }
+      const url = eventData.id ? `/api/event/${eventData.id}` : '/api/event';
+      const method = eventData.id ? 'PUT' : 'POST';
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(eventData),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (eventData.id) {
+          setEvents(prev => prev.map(e => e.id === eventData.id ? data.data : e));
+        } else {
+          setEvents(prev => [...prev, data.data]);
+        }
+        setIsModalOpen(false);
+        // Refresh events after saving
+        let startDate = new Date(currentDate);
+        let endDate = new Date(currentDate);
+        if (view === 'week') {
+          startDate.setDate(currentDate.getDate() - currentDate.getDay());
+          endDate.setDate(startDate.getDate() + 6);
+        } else if (view === 'month') {
+          startDate.setDate(1);
+          endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        }
+        fetchEvents(startDate, endDate);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to save event:', errorData);
+        alert('Failed to save event: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error saving event:', error);
+      alert('Error saving event: ' + error.message);
     }
   };
 
-  const handleDeleteEvent = (eventId) => {
-    setEvents(prev => prev.filter(e => e.id !== eventId));
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found in localStorage');
+        return;
+      }
+      
+      // Check if this is a recurring event
+      const eventToDelete = events.find(e => e.id === eventId);
+      if (eventToDelete && eventToDelete.repeat !== 'Never') {
+        // For recurring events, ask user what to delete
+        const deleteChoice = confirm(
+          `This is a recurring event. Do you want to:\n\n` +
+          `Click OK to delete this event and all future occurrences\n` +
+          `Click Cancel to cancel`
+        );
+        
+        if (!deleteChoice) {
+          return;
+        }
+      }
+      
+      const response = await fetch(`/api/event/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        setEvents(prev => prev.filter(e => e.id !== eventId));
+        setIsModalOpen(false);
+        // Refresh events after deleting
+        let startDate = new Date(currentDate);
+        let endDate = new Date(currentDate);
+        if (view === 'week') {
+          startDate.setDate(currentDate.getDate() - currentDate.getDay());
+          endDate.setDate(startDate.getDate() + 6);
+        } else if (view === 'month') {
+          startDate.setDate(1);
+          endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        }
+        fetchEvents(startDate, endDate);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to delete event:', errorData);
+        alert('Failed to delete event: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Error deleting event: ' + error.message);
+    }
   };
 
   const timeSlots = Array.from({ length: 12 }, (_, i) => {
@@ -480,12 +736,10 @@ export const ContinuousCalendar = ({ onClick }) => {
               </h2>
             </div>
           </div>
-          
           <div className="flex items-center space-x-3">
             <Button variant="secondary" onClick={handleToday}>
               Today
             </Button>
-            
             <div className="flex bg-gray-100 rounded-lg p-1">
               {['DAY', 'WEEK', 'MONTH'].map((viewType) => (
                 <button
@@ -501,17 +755,17 @@ export const ContinuousCalendar = ({ onClick }) => {
                 </button>
               ))}
             </div>
-            
-            <Button onClick={handleAddEvent}>
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add Event
-            </Button>
+            {!readOnly && (
+              <Button onClick={handleAddEvent}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Event
+              </Button>
+            )}
           </div>
         </div>
       </div>
-
       {/* Calendar Content */}
       <div className="flex-1 overflow-hidden">
         {view === 'day' && (
@@ -541,7 +795,6 @@ export const ContinuousCalendar = ({ onClick }) => {
                 </div>
               </div>
             </div>
-
             {/* Day Grid */}
             <div className="flex-1 overflow-y-auto">
               <div className="grid grid-cols-2 gap-0 min-h-full">
@@ -556,24 +809,50 @@ export const ContinuousCalendar = ({ onClick }) => {
                     </div>
                   ))}
                 </div>
-
                 {/* Day Column */}
                 <div className="relative">
                   {timeSlots.map((slot) => (
                     <div
                       key={slot.hour}
                       className="h-16 border-b border-gray-100 hover:bg-gray-50 cursor-pointer relative"
-                      onClick={() => onClick && onClick(currentDate.getDate(), currentDate.getMonth(), currentDate.getFullYear())}
+                      onClick={() => !readOnly && onClick && onClick(currentDate.getDate(), currentDate.getMonth(), currentDate.getFullYear())}
                     />
                   ))}
-                  
                   {/* Events for this day */}
                   {getEventsForDate(currentDate).map((event) => {
-                    const startHour = event.start.getHours();
+                    // Convert string dates to Date objects if needed
+                    const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+                    const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+                    
+                    // Handle all-day events
+                    if (event.allDay) {
+                      return (
+                        <div
+                          key={event.id}
+                          className={`absolute left-1 right-1 top-0 ${event.color} text-white text-xs p-2 rounded-lg shadow-sm z-10 overflow-hidden cursor-pointer hover:opacity-90`}
+                          style={{
+                            height: '40px'
+                          }}
+                          onClick={() => handleEventClick(event)}
+                        >
+                          <div className="font-medium truncate">
+                            {event.title}
+                            {event.isRecurring && (
+                              <span className="ml-1 text-xs opacity-75">🔄</span>
+                            )}
+                          </div>
+                          <div className="opacity-90 text-xs">
+                            All day
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    const startHour = eventStart.getHours();
                     if (startHour < 9 || startHour > 20) return null;
                     
-                    const startMinute = event.start.getMinutes();
-                    const duration = (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
+                    const startMinute = eventStart.getMinutes();
+                    const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
                     const top = (startHour - 9 + startMinute / 60) * 64;
                     const height = duration * 64;
                     
@@ -587,9 +866,14 @@ export const ContinuousCalendar = ({ onClick }) => {
                         }}
                         onClick={() => handleEventClick(event)}
                       >
-                        <div className="font-medium truncate">{event.title}</div>
+                        <div className="font-medium truncate">
+                          {event.title}
+                          {event.isRecurring && (
+                            <span className="ml-1 text-xs opacity-75">🔄</span>
+                          )}
+                        </div>
                         <div className="opacity-90 text-xs">
-                          {formatTime(event.start)} - {formatTime(event.end)}
+                          {formatTime(eventStart)} - {formatTime(eventEnd)}
                         </div>
                       </div>
                     );
@@ -599,7 +883,6 @@ export const ContinuousCalendar = ({ onClick }) => {
             </div>
           </div>
         )}
-
         {view === 'week' && (
           <div className="h-full flex flex-col">
             {/* Week Header */}
@@ -632,7 +915,6 @@ export const ContinuousCalendar = ({ onClick }) => {
                 ))}
               </div>
             </div>
-
             {/* Week Grid */}
             <div className="flex-1 overflow-y-auto">
               <div className="grid grid-cols-8 gap-0 min-h-full">
@@ -647,7 +929,6 @@ export const ContinuousCalendar = ({ onClick }) => {
                     </div>
                   ))}
                 </div>
-
                 {/* Day Columns */}
                 {getWeekDays().map((date, dayIndex) => (
                   <div key={dayIndex} className="border-r border-gray-200 last:border-r-0 relative">
@@ -655,17 +936,44 @@ export const ContinuousCalendar = ({ onClick }) => {
                       <div
                         key={slot.hour}
                         className="h-16 border-b border-gray-100 hover:bg-gray-50 cursor-pointer relative"
-                        onClick={() => onClick && onClick(date.getDate(), date.getMonth(), date.getFullYear())}
+                        onClick={() => !readOnly && onClick && onClick(date.getDate(), date.getMonth(), date.getFullYear())}
                       />
                     ))}
-                    
                     {/* Events for this day */}
                     {getEventsForDate(date).map((event) => {
-                      const startHour = event.start.getHours();
+                      // Convert string dates to Date objects if needed
+                      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+                      const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+                      
+                      // Handle all-day events
+                      if (event.allDay) {
+                        return (
+                          <div
+                            key={event.id}
+                            className={`absolute left-1 right-1 top-0 ${event.color} text-white text-xs p-2 rounded-lg shadow-sm z-10 overflow-hidden cursor-pointer hover:opacity-90`}
+                            style={{
+                              height: '40px'
+                            }}
+                            onClick={() => handleEventClick(event)}
+                          >
+                            <div className="font-medium truncate">
+                              {event.title}
+                              {event.isRecurring && (
+                                <span className="ml-1 text-xs opacity-75">🔄</span>
+                              )}
+                            </div>
+                            <div className="opacity-90 text-xs">
+                              All day
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      const startHour = eventStart.getHours();
                       if (startHour < 9 || startHour > 20) return null;
                       
-                      const startMinute = event.start.getMinutes();
-                      const duration = (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
+                      const startMinute = eventStart.getMinutes();
+                      const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
                       const top = (startHour - 9 + startMinute / 60) * 64;
                       const height = duration * 64;
                       
@@ -679,9 +987,14 @@ export const ContinuousCalendar = ({ onClick }) => {
                           }}
                           onClick={() => handleEventClick(event)}
                         >
-                          <div className="font-medium truncate">{event.title}</div>
+                          <div className="font-medium truncate">
+                            {event.title}
+                            {event.isRecurring && (
+                              <span className="ml-1 text-xs opacity-75">🔄</span>
+                            )}
+                          </div>
                           <div className="opacity-90 text-xs">
-                            {formatTime(event.start)} - {formatTime(event.end)}
+                            {formatTime(eventStart)} - {formatTime(eventEnd)}
                           </div>
                         </div>
                       );
@@ -692,7 +1005,6 @@ export const ContinuousCalendar = ({ onClick }) => {
             </div>
           </div>
         )}
-
         {view === 'month' && (
           <div className="h-full bg-white">
             <div className="grid grid-cols-7 gap-0 border-b border-gray-200">
@@ -702,12 +1014,10 @@ export const ContinuousCalendar = ({ onClick }) => {
                 </div>
               ))}
             </div>
-            
             <div className="grid grid-cols-7 gap-0 flex-1 h-full">
               {getMonthDays().map((date, index) => {
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth();
                 const dayEvents = getEventsForDate(date);
-                
                 return (
                   <div
                     key={index}
@@ -736,6 +1046,9 @@ export const ContinuousCalendar = ({ onClick }) => {
                           }}
                         >
                           {event.title}
+                          {event.isRecurring && (
+                            <span className="ml-1 opacity-75">🔄</span>
+                          )}
                         </div>
                       ))}
                       {dayEvents.length > 3 && (
@@ -751,7 +1064,6 @@ export const ContinuousCalendar = ({ onClick }) => {
           </div>
         )}
       </div>
-
       {/* Event Modal */}
       <EventModal
         isOpen={isModalOpen}
@@ -759,6 +1071,7 @@ export const ContinuousCalendar = ({ onClick }) => {
         event={selectedEvent}
         onSave={handleSaveEvent}
         onDelete={handleDeleteEvent}
+        readOnly={readOnly}
       />
     </div>
   );

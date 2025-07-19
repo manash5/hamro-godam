@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { Order } from '@/models/order/order';
 import { Product } from '@/models/product/product';
+import { verifyToken } from '@/utils/auth';
 
-export async function GET() {
+export async function GET(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     await connectToDB();
     const orders = await Order.find().sort({ createdAt: -1 });
@@ -14,6 +19,10 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
   try {
     const body = await request.json();
     await connectToDB();

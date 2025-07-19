@@ -5,7 +5,7 @@ import { Employee } from '@/models/employee/employee';
 // GET employee by ID
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     await connectToDB();
 
     const employee = await Employee.findById(id);
@@ -25,7 +25,7 @@ export async function GET(request, { params }) {
 // PATCH update employee by ID
 export async function PATCH(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     await connectToDB();
 
@@ -39,6 +39,7 @@ export async function PATCH(request, { params }) {
     employee.contact_number = body.contact_number ?? employee.contact_number;
     employee.address = body.address ?? employee.address;
     employee.password = body.password ?? employee.password;
+    employee.salary = body.salary ?? employee.salary; 
 
     await employee.save();
 
@@ -54,7 +55,7 @@ export async function PATCH(request, { params }) {
 // DELETE employee by ID
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     await connectToDB();
 
     const employee = await Employee.findByIdAndDelete(id);

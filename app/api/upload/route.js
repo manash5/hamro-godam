@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
+import { verifyToken } from '@/utils/auth';
 
 export async function POST(request) {
+  const { valid, message, skip } = verifyToken(request);
+  if (!valid && !skip) {
+    return NextResponse.json({ message }, { status: 401 });
+  }
+
   try {
     // Check if multer is available
     let multer;
