@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
 import { User } from '@/models/user/user';
+import bcrypt from 'bcryptjs';
 
 // GET user by ID
 export async function GET(request, { params }) {
@@ -46,7 +47,9 @@ export async function PATCH(request, { params }) {
     user.FirstName = body.FirstName || user.FirstName;
     user.LastName = body.LastName || user.LastName;
     user.email = body.email || user.email;
-    user.password = body.password || user.password;
+    if (body.password) {
+      user.password = await bcrypt.hash(body.password, 10);
+    }
     await user.save();
 
     return NextResponse.json(
