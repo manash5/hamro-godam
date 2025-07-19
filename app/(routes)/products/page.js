@@ -5,6 +5,8 @@ import { Search, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '../../../components/sidebar';
 import AuthGuard from '@/components/AuthGuard';
 import TokenManager from '@/utils/tokenManager';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -239,6 +241,7 @@ export default function ProductsPage() {
       });
       const result = await res.json();
       if (res.ok) {
+        toast.success('Product added successfully!');
         setShowAddProductModal(false);
         setProductForm({
           name: '',
@@ -254,10 +257,10 @@ export default function ProductsPage() {
         });
         fetchProducts();
       } else {
-        alert('Failed to save product: ' + result.error);
+        toast.error('Failed to save product: ' + result.error);
       }
     } catch (err) {
-      alert('Error saving product: ' + err.message);
+      toast.error('Error saving product: ' + err.message);
     }
   };
 
@@ -283,6 +286,7 @@ export default function ProductsPage() {
       });
       const result = await res.json();
       if (res.ok) {
+        toast.success('Product updated successfully!');
         setShowEditProductModal(false);
         setEditProduct(null);
         // Reset form fields after save
@@ -300,10 +304,10 @@ export default function ProductsPage() {
         // Reload the table to show the updated product
         fetchProducts();
       } else {
-        alert('Failed to update product: ' + result.error);
+        toast.error('Failed to update product: ' + result.error);
       }
     } catch (err) {
-      alert('Error updating product: ' + err.message);
+      toast.error('Error updating product: ' + err.message);
     }
   };
 
@@ -316,13 +320,14 @@ export default function ProductsPage() {
       });
 
       if (res.ok) {
+        toast.success('Product deleted successfully!');
         setProducts(prev => prev.filter(product => (product.id || product._id) !== productId));
         setDeleteConfirm(null);
       } else {
-        console.error('Failed to delete product');
+        toast.error('Failed to delete product');
       }
     } catch (err) {
-      console.error('Delete product error:', err);
+      toast.error('Delete product error:', err);
     }
   };
 
@@ -499,7 +504,7 @@ export default function ProductsPage() {
                           </div>
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-700">{product.category}</td>
-                        <td className="py-4 px-6 text-sm font-semibold text-gray-900">${product.price?.toFixed ? product.price.toFixed(2) : product.price}</td>
+                        <td className="py-4 px-6 text-sm font-semibold text-gray-900">₹{product.price?.toFixed ? product.price.toFixed(2) : product.price}</td>
                         <td className="py-4 px-6 text-sm text-gray-700">{product.stock}</td>
                         <td className="py-4 px-6">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(getProductStatus(product.stock))}`}>
@@ -678,7 +683,7 @@ export default function ProductsPage() {
                       Price <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
                       <input
                         type="number"
                         value={productForm.price}
@@ -930,7 +935,7 @@ export default function ProductsPage() {
                       Price <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
                       <input
                         type="number"
                         value={productForm.price}
@@ -1036,6 +1041,7 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="dark" />
       </div>
     </AuthGuard>
   );

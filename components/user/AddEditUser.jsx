@@ -343,7 +343,7 @@ const AddEditUserForm = ({ user = null, onSave, onCancel, isOpen = false }) => {
                   Salary *
                 </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                  <span className="absolute left-3 top-2.5 text-gray-400" style={{fontSize: 16}}>₹</span>
                   <input
                     type="number"
                     name="salary"

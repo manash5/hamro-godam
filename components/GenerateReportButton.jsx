@@ -3,120 +3,164 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { FileText, Sparkles } from 'lucide-react';
 
-const drawUserIcon = (doc, x, y) => {
-  // Head
-  doc.setFillColor(59, 130, 246); // blue
-  doc.circle(x + 6, y + 8, 4, 'F');
-  // Shoulders
-  doc.ellipse(x + 6, y + 13, 5, 2.5, 'F');
-};
-
-const drawBoxIcon = (doc, x, y) => {
-  doc.setFillColor(251, 191, 36); // yellow
-  doc.rect(x + 2, y + 6, 8, 8, 'F');
-  doc.setDrawColor(234, 179, 8);
-  doc.line(x + 2, y + 10, x + 10, y + 10); // lid
-};
-
-const drawMoneyIcon = (doc, x, y) => {
-  doc.setFillColor(239, 68, 68); // red
-  doc.circle(x + 6, y + 10, 5, 'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(10);
-  doc.text('$', x + 4.5, y + 13);
-};
-
-const drawRefreshIcon = (doc, x, y) => {
-  doc.setDrawColor(34, 197, 94); // green
-  doc.setLineWidth(1.2);
-  doc.arc(x + 6, y + 10, 5, Math.PI * 0.2, Math.PI * 1.5, false);
-  doc.line(x + 6, y + 5, x + 8, y + 7); // arrowhead
-  doc.line(x + 6, y + 5, x + 4, y + 7);
-};
-
 const GenerateReportButton = ({ chartRef }) => {
   const handleGenerateReport = async () => {
     const doc = new jsPDF();
-    // Header styling
-    doc.setFillColor(44, 62, 80);
-    doc.rect(0, 0, 210, 25, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.text('Dashboard Analysis Report', 105, 17, { align: 'center' });
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
 
-    // Metrics grid (icons only, no circles)
+    // Clean Header
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+    
+    // Header text - simple and clean
+    doc.setTextColor(31, 41, 55);
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Dashboard Report', pageWidth/2, 25, { align: 'center' });
+    
+    // Date
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(107, 114, 128);
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    doc.text(currentDate, pageWidth/2, 35, { align: 'center' });
+
+    // Thin separator line
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.5);
+    doc.line(20, 45, pageWidth - 20, 45);
+
+    // Clean Metrics Section
     const metrics = [
-      { label: 'Customers', value: '30,567', change: '-5%', color: '#3b82f6', changeColor: '#ef4444', drawIcon: drawUserIcon },
-      { label: 'Products', value: '3,037', change: '+18%', color: '#fbbf24', changeColor: '#22c55e', drawIcon: drawBoxIcon },
-      { label: 'Sales', value: '20,509', change: '+33%', color: '#ef4444', changeColor: '#22c55e', drawIcon: drawMoneyIcon },
-      { label: 'Refunds', value: '21,647', change: '-12%', color: '#22c55e', changeColor: '#ef4444', drawIcon: drawRefreshIcon },
+      { label: 'Customers', value: '30,567', change: '-5%', isPositive: false },
+      { label: 'Products', value: '3,037', change: '+18%', isPositive: true },
+      { label: 'Sales', value: '₹20,509', change: '+33%', isPositive: true },
+      { label: 'Refunds', value: '21,647', change: '-12%', isPositive: false },
     ];
-    // Draw grid background
-    doc.setFillColor(241, 245, 249); // #f1f5f9
-    doc.roundedRect(10, 30, 190, 32, 4, 4, 'F');
-    // Draw metrics
-    metrics.forEach((m, i) => {
-      const x = 18 + i * 47;
-      const y = 34;
-      // Draw icon
-      m.drawIcon(doc, x, y);
-      // Value
-      doc.setFontSize(15);
-      doc.setTextColor(17, 24, 39); // #111827
+
+    // Simple grid layout
+    const startY = 60;
+    const cardWidth = 45;
+    const cardHeight = 25;
+    const spacing = 2;
+    const totalWidth = 4 * cardWidth + 3 * spacing;
+    const startX = (pageWidth - totalWidth) / 2;
+
+    metrics.forEach((metric, i) => {
+      const x = startX + i * (cardWidth + spacing);
+      const y = startY;
+      
+      // Clean white card with subtle border
+      doc.setFillColor(255, 255, 255);
+      doc.rect(x, y, cardWidth, cardHeight, 'F');
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(0.3);
+      doc.rect(x, y, cardWidth, cardHeight, 'S');
+      
+      // Value - large and prominent
+      doc.setFontSize(16);
+      doc.setTextColor(17, 24, 39);
       doc.setFont('helvetica', 'bold');
-      doc.text(m.value, x + 20, y + 12);
-      // Label
-      doc.setFontSize(10);
+      doc.text(metric.value, x + cardWidth/2, y + 10, { align: 'center' });
+      
+      // Label - small and subtle
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 116, 139); // #64748b
-      doc.text(m.label, x + 20, y + 18);
-      // Change
-      doc.setFontSize(10);
-      doc.setTextColor(...(m.changeColor === '#22c55e' ? [34,197,94] : [239,68,68]));
-      doc.text(m.change, x + 20, y + 24);
+      doc.setTextColor(107, 114, 128);
+      doc.text(metric.label, x + cardWidth/2, y + 16, { align: 'center' });
+      
+      // Change indicator - clean colored text
+      doc.setFontSize(8);
+      doc.setTextColor(metric.isPositive ? 34 : 220, metric.isPositive ? 197 : 38, metric.isPositive ? 94 : 38);
+      doc.setFont('helvetica', 'bold');
+      doc.text(metric.change, x + cardWidth/2, y + 22, { align: 'center' });
     });
 
-    // Highlights section
-    doc.setFillColor(236, 253, 245); // #ecfdf5
-    doc.roundedRect(10, 68, 190, 18, 3, 3, 'F');
-    doc.setFontSize(12);
-    doc.setTextColor(16, 185, 129); // #10b981
+    // Key Highlights - minimal design
+    const highlightsY = 100;
+    
+    doc.setFontSize(16);
+    doc.setTextColor(31, 41, 55);
     doc.setFont('helvetica', 'bold');
-    doc.text('Highlights', 15, 78);
-    doc.setFont('helvetica', 'normal');
+    doc.text('Key Highlights', 20, highlightsY);
+    
+    // Simple bullet points
     doc.setFontSize(11);
-    doc.setTextColor(55, 65, 81); // #374151
-    doc.text(`Most Popular Product: Yew Plum Pine (98k sold)`, 15, 84);
-    doc.text(`Highest Sales Month: Mar (310 units)`, 110, 84);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(55, 65, 81);
+    doc.text('• Most Popular Product: Yew Plum Pine (98,000 units sold)', 20, highlightsY + 12);
+    doc.text('• Highest Sales Month: March 2024 (310 premium units)', 20, highlightsY + 22);
 
-    // Chart section
-    if (chartRef.current) {
-      const chartCanvas = await html2canvas(chartRef.current, { backgroundColor: null, scale: 2 });
-      const imgData = chartCanvas.toDataURL('image/png');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(13);
-      doc.setTextColor(44, 62, 80);
-      doc.text('Units Sold Chart:', 10, 100);
-      doc.addImage(imgData, 'PNG', 10, 105, 190, 60);
+    // Chart Section - clean and minimal
+    const chartY = 140;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(31, 41, 55);
+    doc.text('Sales Performance', 20, chartY);
+
+    if (chartRef && chartRef.current) {
+      try {
+        const chartCanvas = await html2canvas(chartRef.current, { 
+          backgroundColor: '#ffffff', 
+          scale: 2,
+          useCORS: true 
+        });
+        const imgData = chartCanvas.toDataURL('image/png');
+        
+        // Clean border around chart
+        doc.setDrawColor(229, 231, 235);
+        doc.setLineWidth(0.5);
+        doc.rect(20, chartY + 8, pageWidth - 40, 70, 'S');
+        
+        doc.addImage(imgData, 'PNG', 21, chartY + 9, pageWidth - 42, 68);
+      } catch (error) {
+        console.log('Chart capture failed:', error);
+        doc.setFillColor(249, 250, 251);
+        doc.rect(20, chartY + 8, pageWidth - 40, 70, 'F');
+        doc.setDrawColor(229, 231, 235);
+        doc.setLineWidth(0.5);
+        doc.rect(20, chartY + 8, pageWidth - 40, 70, 'S');
+        
+        doc.setFontSize(12);
+        doc.setTextColor(156, 163, 175);
+        doc.text('Chart will be displayed here', pageWidth/2, chartY + 45, { align: 'center' });
+      }
     }
 
-    // Footer
-    doc.setFontSize(10);
-    doc.setTextColor(150, 150, 150);
-    doc.text('Generated by Hamro Godam Dashboard', 10, 285);
+    // Clean Footer
+    const footerY = pageHeight - 20;
+    
+    // Separator line
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.3);
+    doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
+    
+    // Footer text
+    doc.setFontSize(9);
+    doc.setTextColor(156, 163, 175);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Generated by Hamro Godam Dashboard', 20, footerY);
+    doc.text(`${new Date().toLocaleTimeString()}`, pageWidth - 20, footerY, { align: 'right' });
 
-    doc.save('dashboard-analysis-report.pdf');
+    // Save with clean filename
+    doc.save('dashboard-report.pdf');
   };
 
   return (
     <button
       onClick={handleGenerateReport}
-      className="flex items-center gap-2 px-6 py-3 rounded-lg bg-[#1e3a8a] text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
     >
-      <FileText className="w-5 h-5" />
+      <FileText className="w-4 h-4" />
       Generate Report
     </button>
   );
 };
 
-export default GenerateReportButton; 
+export default GenerateReportButton;

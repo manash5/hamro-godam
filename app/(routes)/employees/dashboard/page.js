@@ -73,13 +73,13 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">$</span>
+                    <span className="text-white font-bold text-sm">₹</span>
                   </div>
                 </div>
                 <span className="text-green-600 text-sm font-medium">+12%</span>
               </div>
               <p className="text-gray-600 text-sm mb-1">Total Sales</p>
-              <p className="text-3xl font-bold text-gray-900">$45,250</p>
+              <p className="text-3xl font-bold text-gray-900">₹45,250</p>
             </div>
 
             {/* Total Orders */}
@@ -132,7 +132,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">$8,500</p>
+                      <p className="font-semibold text-gray-900">₹8,500</p>
                       <p className="text-sm text-green-600">+15%</p>
                     </div>
                   </div>
@@ -149,7 +149,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">$12,800</p>
+                      <p className="font-semibold text-gray-900">₹12,800</p>
                       <p className="text-sm text-green-600">+22%</p>
                     </div>
                   </div>
@@ -166,7 +166,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">$9,200</p>
+                      <p className="font-semibold text-gray-900">₹9,200</p>
                       <p className="text-sm text-green-600">+18%</p>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ const Dashboard = () => {
                     <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">Payment received</p>
-                      <p className="text-xs text-gray-500">Order #12044 - $1,250</p>
+                      <p className="text-xs text-gray-500">Order #12044 - ₹1,250</p>
                     </div>
                     <p className="text-xs text-gray-400">10 min ago</p>
                   </div>

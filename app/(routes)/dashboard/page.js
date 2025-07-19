@@ -133,7 +133,7 @@ const page = () => {
           return {
             name,
             qty,
-            price: prod.price ? `$${prod.price}` : '-',
+            price: prod.price ? `₹${prod.price}` : '-',
             image: '👟', // Placeholder, replace with prod.image if available
             color: prod.color || 'blue',
             rating: 4, // Placeholder, could be dynamic if available
