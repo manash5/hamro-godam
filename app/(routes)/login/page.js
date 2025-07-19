@@ -19,6 +19,7 @@ const page = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     setLoginError('');
+    // Email validation removed as requested
     try {
       // 1. Check if account exists
       const res = await fetch('/api/login', {
@@ -40,18 +41,8 @@ const page = () => {
 
       // You now have the user ID
       const userId = result.id;
-
-      // 2. Call /api/send to send email
       const token = result?.token;
-      await fetch('/api/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ email: data.email }),
-      });
-
+      let userName = "New User";
       // Fetch user data and store in localStorage
       try {
         const userRes = await fetch(`/api/user/${userId}`, {
@@ -62,6 +53,7 @@ const page = () => {
           if (userData.data) {
             localStorage.setItem('admin', userData.data.FirstName || 'User');
             localStorage.setItem('adminEmail', userData.data.email || 'user@example.com');
+            userName = userData.data.FirstName || "New User";
             // Clear employee data to avoid conflicts
             localStorage.removeItem('employee');
             localStorage.removeItem('employeeEmail');
@@ -69,11 +61,18 @@ const page = () => {
         }
       } catch (e) { /* ignore error, fallback to dashboard */ }
 
-      // 3. Navigate to dashboard (optionally pass userId)
+      // 2. Call /api/send to send email to the user using GET
+      try {
+        await fetch(`/api/send?email=${encodeURIComponent(data.email)}&userName=${encodeURIComponent(userName)}`, {
+          method: 'GET',
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+        });
+      } catch (e) { /* ignore email error */ }
+
+      // 3. Navigate to dashboard
       router.push('/dashboard');
-      // Or, if you want to fetch user details:
-      // const userRes = await fetch(`/api/user/${userId}`);
-      // const userData = await userRes.json();
     } catch (err) {
       setLoginError('Something went wrong. Please try again.');
     } finally {
