@@ -5,7 +5,9 @@ import { Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw, CheckCircle
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import GenerateReportButton from '../../../components/GenerateReportButton';
+import NotificationBell from '../../../components/NotificationBell';
 import TokenManager from '@/utils/tokenManager';
+import NotificationManager from '@/utils/notificationManager';
 import AuthGuard from '@/components/AuthGuard';
 
 const page = () => {
@@ -87,7 +89,7 @@ const page = () => {
     // Also check for user changes on focus (in case localStorage was updated in another tab)
     const handleFocus = () => {
       const name = localStorage.getItem('admin');
-      if (name && name !== userName) {
+      if (name) {
         setUserName(name);
       }
     };
@@ -98,7 +100,7 @@ const page = () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [userName]);
+  }, []); // Remove userName dependency to prevent infinite re-renders
 
   // Fetch products and orders, then aggregate dashboard data
   useEffect(() => {
@@ -131,7 +133,7 @@ const page = () => {
           return {
             name,
             qty,
-            price: prod.price ? `$${prod.price}` : '-',
+            price: prod.price ? `₹${prod.price}` : '-',
             image: '👟', // Placeholder, replace with prod.image if available
             color: prod.color || 'blue',
             rating: 4, // Placeholder, could be dynamic if available
@@ -181,6 +183,78 @@ const page = () => {
       setDiscountCount(discountSum);
     };
     fetchData();
+  }, []);
+
+  // Check for low stock products and create notifications
+  useEffect(() => {
+    const checkLowStockProducts = async () => {
+      const token = getToken();
+      if (!token) return;
+
+      try {
+        // Fetch products
+        const productResponse = await fetch('/api/product', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (productResponse.ok) {
+          const productData = await productResponse.json();
+          const lowStockProducts = productData.data?.filter(product => product.stock < 5) || [];
+          
+          // Create notifications for low stock products
+          for (const product of lowStockProducts) {
+            // Check if we should create an alert for this product
+            if (NotificationManager.shouldCreateLowStockAlert(product.id, product.stock)) {
+              // Check if notification already exists in backend
+              const notificationResponse = await fetch('/api/notification', {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              
+              if (notificationResponse.ok) {
+                const notificationData = await notificationResponse.json();
+                const existingNotification = notificationData.data?.find(
+                  n => n.relatedProduct === product.id && n.category === 'stock' && n.isUnread
+                );
+                
+                // Check if this notification was recently read
+                const wasRecentlyRead = NotificationManager.wasRecentlyRead(product.id, 'stock');
+                
+                if (!existingNotification && !wasRecentlyRead) {
+                  await fetch('/api/notification', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      title: 'Low Stock Alert',
+                      message: `${product.name} inventory is running low (${product.stock} units remaining)`,
+                      type: 'alert',
+                      category: 'stock',
+                      priority: 'high',
+                      relatedProduct: product.id
+                    })
+                  });
+                }
+              }
+            }
+          }
+          
+          // Clean up alerts for products that are no longer low stock
+          const currentProductIds = lowStockProducts.map(p => p.id);
+          NotificationManager.cleanupLowStockAlerts(currentProductIds);
+        }
+      } catch (error) {
+        console.error('Error checking low stock products:', error);
+      }
+    };
+
+    checkLowStockProducts();
+    
+    // Set up periodic checks every 5 minutes
+    const interval = setInterval(checkLowStockProducts, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const renderStars = (rating) => {
@@ -286,7 +360,10 @@ const page = () => {
                 </div>
                 <p style={{ color: '#6b7280', marginLeft: '1.5rem', fontSize: '1.125rem', fontWeight: 500 }}>Here's what's happening with your store today.</p>
               </div>
-              <GenerateReportButton chartRef={chartRef} />
+              <div className="flex items-center space-x-4">
+                <NotificationBell />
+                <GenerateReportButton chartRef={chartRef} />
+              </div>
             </div>
 
             {/* Upper Section - Now with exact design from first file */}

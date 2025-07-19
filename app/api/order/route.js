@@ -58,6 +58,7 @@ export async function POST(request) {
       status: body.status,               
       deliveryDate: body.deliveryDate,   
       payment: body.paymentMethod || body.payment,
+      deliveryBy: body.deliveryBy || 'ram hari',
     });
 
     await newOrder.save();

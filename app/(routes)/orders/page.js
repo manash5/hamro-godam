@@ -6,6 +6,9 @@ import Sidebar from '@/components/sidebar';
 import AddOrderModal from '@/components/order/AddOrderModel';
 import AuthGuard from '@/components/AuthGuard';
 import TokenManager from '@/utils/tokenManager';
+import jsPDF from 'jspdf';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function OrdersPage() {
   const [editOrder, setEditOrder] = useState(null);
@@ -46,6 +49,7 @@ export default function OrdersPage() {
             items: `${order.productName.length} Items`,
             itemsDetail: order.productName.join(', '),
             payment: order.payment || 'Not specified',
+            deliveryBy: order.deliveryBy || 'Not specified',
             // Store original data for editing
             originalData: order,
           }))
@@ -135,12 +139,14 @@ export default function OrdersPage() {
           items: `${result.data.productName.length} Items`,
           itemsDetail: result.data.productName.join(', '),
           payment: result.data.payment || orderData.paymentMethod || 'Cash',
+          deliveryBy: orderData.deliveryBy || 'Not specified',
           originalData: result.data,
         };
         setOrders(prev => [newOrder, ...prev]);
         setShowAddOrderModal(false);
+        toast.success('Order added successfully!');
       } else {
-        alert(`Failed to save order: ${result.error}`);
+        toast.error('Failed to save order: ' + result.error);
         console.error('Failed to save order:', result.error);
       }
     } catch (err) {
@@ -175,13 +181,15 @@ export default function OrdersPage() {
           items: `${result.data.productName.length} Items`,
           itemsDetail: result.data.productName.join(', '),
           payment: result.data.payment || orderData.paymentMethod || 'Cash',
+          deliveryBy: orderData.deliveryBy || 'Not specified',
           originalData: result.data,
         };
         setOrders(prev => prev.map(order => order.id === editOrder.id ? updatedOrder : order));
         setShowEditOrderModal(false);
         setEditOrder(null);
+        toast.success('Order updated successfully!');
       } else {
-        alert(`Failed to update order: ${result.error}`);
+        toast.error('Failed to update order: ' + result.error);
         console.error('Failed to update order:', result.error);
       }
     } catch (err) {
@@ -201,7 +209,9 @@ export default function OrdersPage() {
       if (res.ok) {
         setOrders(prev => prev.filter(order => order.id !== orderId));
         setDeleteConfirm(null);
+        toast.success('Order deleted successfully!');
       } else {
+        toast.error('Failed to delete order');
         console.error('Failed to delete order');
       }
     } catch (err) {
@@ -261,12 +271,78 @@ export default function OrdersPage() {
             <h1 className="text-4xl font-bold text-gray-900">Orders</h1>
             <p className="text-sm text-gray-500 mt-1">Track your orders instantly</p>
           </div>
-          <button 
-            onClick={handleOpenAddOrderModal}
-            className="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-          >
-            <Plus size={18} /> Add Order
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={handleOpenAddOrderModal}
+              className="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Plus size={18} /> Add Order
+            </button>
+            <button
+              onClick={() => {
+                const doc = new jsPDF();
+                // Header styling
+                doc.setFillColor(30, 58, 138); // blue
+                doc.rect(0, 0, 210, 20, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.text('Orders Report', 105, 13, { align: 'center' });
+                doc.setFontSize(11);
+                doc.text(`Generated: ${new Date().toLocaleString()}`, 105, 19, { align: 'center' });
+                // Table header
+                const startY = 28;
+                const colWidths = [30, 30, 25, 35, 20, 20, 30, 20];
+                const headers = ['Order ID', 'Customer', 'Phone', 'Date', 'Amount', 'Status', 'Items', 'Payment'];
+                let x = 10;
+                let y = startY;
+                doc.setFontSize(10);
+                doc.setTextColor(30, 58, 138);
+                headers.forEach((header, i) => {
+                  doc.text(header, x + 1, y);
+                  x += colWidths[i];
+                });
+                // Draw header line
+                doc.setDrawColor(30, 58, 138);
+                doc.line(10, y + 2, 200, y + 2);
+                // Table rows
+                y += 8;
+                doc.setTextColor(33, 37, 41);
+                filteredOrders.forEach(order => {
+                  x = 10;
+                  const row = [
+                    order.id,
+                    order.customer,
+                    order.phone,
+                    order.date + ' ' + order.time,
+                    `$${order.amount.toLocaleString()}`,
+                    order.status,
+                    order.itemsDetail,
+                    order.payment,
+                  ];
+                  row.forEach((cell, i) => {
+                    let text = String(cell);
+                    if (text.length > 18) text = text.slice(0, 15) + '...';
+                    doc.text(text, x + 1, y);
+                    x += colWidths[i];
+                  });
+                  y += 7;
+                  if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                  }
+                });
+                // Footer
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text('Generated by Hamro Godam Orders', 10, 285);
+                doc.save('orders-report.pdf');
+              }}
+              className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Generate PDF
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -329,6 +405,7 @@ export default function OrdersPage() {
                   <th className="py-4 px-6">Amount</th>
                   <th className="py-4 px-6">Status</th>
                   <th className="py-4 px-6">Items</th>
+                  <th className="py-4 px-6">Delivery By</th>
                   <th className="py-4 px-6">Action</th>
                 </tr>
               </thead>
@@ -364,6 +441,9 @@ export default function OrdersPage() {
                     <td className="py-4 px-6">
                       <div className="font-semibold">{order.items}</div>
                       <div className="text-xs text-gray-500">{order.itemsDetail}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="font-semibold">{order.deliveryBy}</div>
                     </td>
                     <td className="py-4 px-6 relative dropdown-container">
                       <button 
@@ -430,6 +510,7 @@ export default function OrdersPage() {
           paymentMethod: editOrder.payment,
           comment: "",
           deliveryDate: editOrder.originalData?.deliveryDate || "",
+          deliveryBy: editOrder.deliveryBy,
         } : null}
       />
 
@@ -486,6 +567,7 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="dark" />
       </div>
     </AuthGuard>
   );

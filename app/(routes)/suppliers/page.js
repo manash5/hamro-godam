@@ -6,6 +6,8 @@ import Sidebar from "@/components/sidebar";
 import AddSupplierModal from "@/components/supplier/AddSupplierModal";
 import AuthGuard from '@/components/AuthGuard';
 import TokenManager from '@/utils/tokenManager';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function SupplierPage() {
   const [suppliers, setSuppliers] = useState([]);
@@ -63,11 +65,12 @@ export default function SupplierPage() {
     });
     const result = await res.json();
     if (res.ok) {
+      toast.success(editingSupplier ? 'Supplier updated successfully!' : 'Supplier added successfully!');
       fetchSuppliers();
       setShowModal(false);
       setEditingSupplier(null);
     } else {
-      console.error("Error saving supplier:", result.error);
+      toast.error('Error saving supplier: ' + result.error);
     }
   };
 
@@ -79,9 +82,10 @@ export default function SupplierPage() {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (res.ok) {
+        toast.success('Supplier deleted successfully!');
         fetchSuppliers();
       } else {
-        console.error("Error deleting supplier");
+        toast.error('Error deleting supplier');
       }
     }
   };
@@ -322,6 +326,7 @@ export default function SupplierPage() {
             onClose={() => setViewingProducts(null)}
           />
         )}
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="dark" />
       </div>
     </AuthGuard>
   );

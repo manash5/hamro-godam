@@ -263,7 +263,7 @@ export default function Page() {
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-lg font-bold text-gray-900">{typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : item.price}</p>
+                          <p className="text-lg font-bold text-gray-900">{typeof item.price === 'number' ? `₹${item.price.toFixed(2)}` : item.price}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500">Stock</p>

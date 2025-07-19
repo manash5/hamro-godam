@@ -77,7 +77,7 @@ const PricingSection = () => {
         <div className="p-8">
           <h3 className="text-2xl font-bold text-blue-900 mb-4">{title}</h3>
           <div className="mb-6">
-            <span className="text-4xl font-bold text-blue-900">${price}</span>
+            <span className="text-4xl font-bold text-blue-900">₹{price}</span>
             <span className="text-gray-500">/month</span>
           </div>
           <ul className="space-y-3 mb-8">

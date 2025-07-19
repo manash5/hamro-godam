@@ -5,9 +5,7 @@ import {
   LayoutDashboard, 
   Package, 
   ShoppingCart, 
-  User, 
-  Settings, 
-  Receipt, 
+
   Calendar,
   ChevronLeft,
   Store, 
@@ -80,8 +78,7 @@ const Sidebar = () => {
     { icon: ShoppingCart, label: 'Products', path: '/employees/products' },
     {icon: BookUser, label: 'Suppliers', path: '/employees/suppliers' },
     {icon: NotebookText, label: 'My Tasks', path: '/employees/mytask'}, 
-    { icon: Calendar, label: 'Calendar', path: '/employees/calendar' },
-    { icon: Settings, label: 'Settings', path: '/settings' }
+    { icon: Calendar, label: 'Calendar', path: '/employees/calendar' }
   ];
 
   // Get the active item based on current pathname

@@ -37,6 +37,10 @@ const orderSchema = new mongoose.Schema({
   deliveryDate: {
     type: Date,
   },
+  deliveryBy: {
+    type: String,
+    default: 'ram hari',
+  },
   
 }, { timestamps: true });
 

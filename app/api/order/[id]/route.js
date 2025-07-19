@@ -95,6 +95,7 @@ export async function PATCH(request, { params }) {
     order.customerAddress = body.customerAddress ?? order.customerAddress;
     order.productName = body.productName ?? order.productName;
     order.productQuantity = body.productQuantity ?? order.productQuantity;
+    order.deliveryBy = body.deliveryBy ?? order.deliveryBy;
 
     await order.save();
 
