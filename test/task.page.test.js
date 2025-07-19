@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import TaskPage from './page'; // or '../page' depending on file structure
+import TaskPage from '../app/(routes)/admin/task/page'; // or '../page' depending on file structure
 import '@testing-library/jest-dom';
 
 jest.mock('@/components/task/AddTaskModal', () => () => <div data-testid="add-task-modal" />);
