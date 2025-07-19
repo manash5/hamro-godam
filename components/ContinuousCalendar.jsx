@@ -525,15 +525,19 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
       endDate = new Date(date);
     } else if (view === 'week') {
       const startOfWeek = new Date(date);
+      startOfWeek.setHours(0, 0, 0, 0);
       startOfWeek.setDate(date.getDate() - date.getDay());
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
       startDate = startOfWeek;
       endDate = endOfWeek;
     } else {
       // month view
       const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+      firstDay.setHours(0, 0, 0, 0);
       const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      lastDay.setHours(23, 59, 59, 999);
       startDate = firstDay;
       endDate = lastDay;
     }
@@ -548,7 +552,14 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
     // Filter events for the specific date
     return allRecurringEvents.filter(event => {
       const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
-      return eventStart.toDateString() === date.toDateString();
+      const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+      // The current cell's day
+      const dayStart = new Date(date);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(date);
+      dayEnd.setHours(23, 59, 59, 999);
+      // Show if event overlaps with this day
+      return eventStart <= dayEnd && eventEnd >= dayStart;
     });
   };
 
@@ -700,15 +711,16 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
     }
   };
 
-  const timeSlots = Array.from({ length: 12 }, (_, i) => {
-    const hour = i + 9; // 9 AM to 8 PM
+  // Change timeSlots to cover 9 AM to 9 PM (9-21)
+  const timeSlots = Array.from({ length: 13 }, (_, i) => {
+    const hour = i + 9; // 9 AM to 9 PM
     const date = new Date();
     date.setHours(hour, 0, 0, 0);
     return {
       hour,
-      label: date.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        hour12: true 
+      label: date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        hour12: true
       }).replace(':00 ', ' ')
     };
   });
@@ -830,9 +842,7 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
                         <div
                           key={event.id}
                           className={`absolute left-1 right-1 top-0 ${event.color} text-white text-xs p-2 rounded-lg shadow-sm z-10 overflow-hidden cursor-pointer hover:opacity-90`}
-                          style={{
-                            height: '40px'
-                          }}
+                          style={{ height: '40px' }}
                           onClick={() => handleEventClick(event)}
                         >
                           <div className="font-medium truncate">
@@ -841,20 +851,29 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
                               <span className="ml-1 text-xs opacity-75">🔄</span>
                             )}
                           </div>
-                          <div className="opacity-90 text-xs">
-                            All day
-                          </div>
+                          <div className="opacity-90 text-xs">All day</div>
                         </div>
                       );
                     }
                     
-                    const startHour = eventStart.getHours();
-                    if (startHour < 9 || startHour > 20) return null;
-                    
-                    const startMinute = eventStart.getMinutes();
-                    const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
-                    const top = (startHour - 9 + startMinute / 60) * 64;
-                    const height = duration * 64;
+                    // Clamp event start/end to 9am-9pm for display only
+                    const gridStart = 9;
+                    const gridEnd = 21;
+                    let displayStartHour = eventStart.getHours();
+                    let displayStartMinute = eventStart.getMinutes();
+                    let displayEndHour = eventEnd.getHours();
+                    let displayEndMinute = eventEnd.getMinutes();
+                    if (displayStartHour < gridStart) {
+                      displayStartHour = gridStart;
+                      displayStartMinute = 0;
+                    }
+                    if (displayEndHour >= gridEnd) {
+                      displayEndHour = gridEnd;
+                      displayEndMinute = 0;
+                    }
+                    const duration = ((displayEndHour + displayEndMinute / 60) - (displayStartHour + displayStartMinute / 60));
+                    const top = ((displayStartHour - gridStart) + displayStartMinute / 60) * 64;
+                    const height = Math.max(duration * 64, 40);
                     
                     return (
                       <div
@@ -862,7 +881,7 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
                         className={`absolute left-1 right-1 ${event.color} text-white text-xs p-2 rounded-lg shadow-sm z-10 overflow-hidden cursor-pointer hover:opacity-90`}
                         style={{
                           top: `${top}px`,
-                          height: `${Math.max(height, 40)}px`
+                          height: `${height}px`
                         }}
                         onClick={() => handleEventClick(event)}
                       >
@@ -875,6 +894,9 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
                         <div className="opacity-90 text-xs">
                           {formatTime(eventStart)} - {formatTime(eventEnd)}
                         </div>
+                        {(eventStart.getHours() < gridStart || eventEnd.getHours() >= gridEnd) && (
+                          <div className="absolute right-2 bottom-1 text-xs opacity-70">↕</div>
+                        )}
                       </div>
                     );
                   })}
@@ -930,29 +952,68 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
                   ))}
                 </div>
                 {/* Day Columns */}
-                {getWeekDays().map((date, dayIndex) => (
-                  <div key={dayIndex} className="border-r border-gray-200 last:border-r-0 relative">
-                    {timeSlots.map((slot) => (
-                      <div
-                        key={slot.hour}
-                        className="h-16 border-b border-gray-100 hover:bg-gray-50 cursor-pointer relative"
-                        onClick={() => !readOnly && onClick && onClick(date.getDate(), date.getMonth(), date.getFullYear())}
-                      />
-                    ))}
-                    {/* Events for this day */}
-                    {getEventsForDate(date).map((event) => {
-                      // Convert string dates to Date objects if needed
-                      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
-                      const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
-                      
-                      // Handle all-day events
-                      if (event.allDay) {
+                {getWeekDays().map((date, dayIndex) => {
+                  // Separate all-day and timed events
+                  const dayEvents = getEventsForDate(date);
+                  const allDayEvents = dayEvents.filter(e => e.allDay);
+                  const timedEvents = dayEvents.filter(e => !e.allDay);
+                  return (
+                    <div key={dayIndex} className="border-r border-gray-200 last:border-r-0 relative">
+                      {/* All-day events at the top */}
+                      {allDayEvents.map((event, idx) => (
+                        <div
+                          key={event.id + '-allday-' + idx}
+                          className={`absolute left-1 right-1 top-[${idx * 44}px] ${event.color} text-white text-xs p-2 rounded-lg shadow-sm z-10 overflow-hidden cursor-pointer hover:opacity-90`}
+                          style={{ height: '40px' }}
+                          onClick={() => handleEventClick(event)}
+                        >
+                          <div className="font-medium truncate">
+                            {event.title}
+                            {event.isRecurring && (
+                              <span className="ml-1 text-xs opacity-75">🔄</span>
+                            )}
+                          </div>
+                          <div className="opacity-90 text-xs">All day</div>
+                        </div>
+                      ))}
+                      {/* Timed events in the grid */}
+                      {timeSlots.map((slot) => (
+                        <div
+                          key={slot.hour}
+                          className="h-16 border-b border-gray-100 hover:bg-gray-50 cursor-pointer relative"
+                          onClick={() => !readOnly && onClick && onClick(date.getDate(), date.getMonth(), date.getFullYear())}
+                        />
+                      ))}
+                      {timedEvents.map((event) => {
+                        const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+                        const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+                        const eventStartTime = eventStart.getHours() + eventStart.getMinutes() / 60;
+                        const eventEndTime = eventEnd.getHours() + eventEnd.getMinutes() / 60;
+                        const gridStart = 9;
+                        const gridEnd = 21;
+                        // Clamp event start/end to 9am-9pm
+                        let displayStartHour = eventStart.getHours();
+                        let displayStartMinute = eventStart.getMinutes();
+                        let displayEndHour = eventEnd.getHours();
+                        let displayEndMinute = eventEnd.getMinutes();
+                        if (displayStartHour < gridStart) {
+                          displayStartHour = gridStart;
+                          displayStartMinute = 0;
+                        }
+                        if (displayEndHour >= gridEnd) {
+                          displayEndHour = gridEnd;
+                          displayEndMinute = 0;
+                        }
+                        const duration = ((displayEndHour + displayEndMinute / 60) - (displayStartHour + displayStartMinute / 60));
+                        const top = ((displayStartHour - gridStart) + displayStartMinute / 60) * 64 + allDayEvents.length * 44;
+                        const height = Math.max(duration * 64, 40);
                         return (
                           <div
                             key={event.id}
-                            className={`absolute left-1 right-1 top-0 ${event.color} text-white text-xs p-2 rounded-lg shadow-sm z-10 overflow-hidden cursor-pointer hover:opacity-90`}
+                            className={`absolute left-1 right-1 ${event.color} text-white text-xs p-2 rounded-lg shadow-sm z-10 overflow-hidden cursor-pointer hover:opacity-90`}
                             style={{
-                              height: '40px'
+                              top: `${top}px`,
+                              height: `${height}px`
                             }}
                             onClick={() => handleEventClick(event)}
                           >
@@ -963,44 +1024,17 @@ export const ContinuousCalendar = ({ onClick, readOnly = false }) => {
                               )}
                             </div>
                             <div className="opacity-90 text-xs">
-                              All day
+                              {formatTime(eventStart)} - {formatTime(eventEnd)}
                             </div>
-                          </div>
-                        );
-                      }
-                      
-                      const startHour = eventStart.getHours();
-                      if (startHour < 9 || startHour > 20) return null;
-                      
-                      const startMinute = eventStart.getMinutes();
-                      const duration = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
-                      const top = (startHour - 9 + startMinute / 60) * 64;
-                      const height = duration * 64;
-                      
-                      return (
-                        <div
-                          key={event.id}
-                          className={`absolute left-1 right-1 ${event.color} text-white text-xs p-2 rounded-lg shadow-sm z-10 overflow-hidden cursor-pointer hover:opacity-90`}
-                          style={{
-                            top: `${top}px`,
-                            height: `${Math.max(height, 40)}px`
-                          }}
-                          onClick={() => handleEventClick(event)}
-                        >
-                          <div className="font-medium truncate">
-                            {event.title}
-                            {event.isRecurring && (
-                              <span className="ml-1 text-xs opacity-75">🔄</span>
+                            {(eventStart.getHours() < gridStart || eventEnd.getHours() >= gridEnd) && (
+                              <div className="absolute right-2 bottom-1 text-xs opacity-70">↕</div>
                             )}
                           </div>
-                          <div className="opacity-90 text-xs">
-                            {formatTime(eventStart)} - {formatTime(eventEnd)}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -10,17 +10,22 @@ export async function GET(request) {
     return Response.json({ message }, { status: 401 });
   }
   try {
+    // Always send to the test email for Resend sandbox mode
+    const email = 'manashlamichhane5@gmail.com';
+    const { searchParams } = new URL(request.url);
+    const userName = searchParams.get('userName');
+    console.log('Attempting to send email to:', email, 'userName:', userName);
     const data = await resend.emails.send({
       from: 'HamroGodam <welcome@resend.dev>',
-      to: ['manashlamichhane5@gmail.com'],
+      to: [email],
       subject: 'Welcome to HamroGodam',
       react: HamroGodamWelcomeEmail({ 
-        userName: "Manash Lamichhane",
-        userEmail: "manashlamichhane5@gmail.com",
+        userName: userName || "New User",
+        userEmail: email,
         tempPassword: "your-temp-password"
       }),
     });
-
+    console.log('Email send result:', data);
     return Response.json(data);
   } catch (error) {
     console.error('Error sending email:', error);

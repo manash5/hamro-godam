@@ -15,6 +15,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
     paymentMethod: "",
     comment: "",
     deliveryDate: "",
+    deliveryBy: "", // Added deliveryBy
   });
 
   const [products, setProducts] = useState([]);
@@ -75,7 +76,8 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
       
       setOrderData({
         ...existingOrder,
-        products: convertedProducts
+        products: convertedProducts,
+        deliveryBy: existingOrder.deliveryBy || "", // Handle existing deliveryBy
       });
     } else {
       setOrderData({
@@ -89,6 +91,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
         paymentMethod: "",
         comment: "",
         deliveryDate: "",
+        deliveryBy: "", // Initialize deliveryBy for new orders
       });
     }
   }, [existingOrder, products]);
@@ -191,6 +194,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
       productName: orderData.products.map(p => p.name),
       productQuantity: orderData.products.map(p => p.quantity),
       productIds: orderData.products.map(p => p.id), // Add product IDs for stock update
+      deliveryBy: orderData.deliveryBy, // Include deliveryBy in payload
     };
     onSave(orderPayload);
   };
@@ -302,7 +306,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
                                     className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm flex justify-between items-center"
                                   >
                                     <span>{prod.name}</span>
-                                    <span className="text-gray-500">${prod.price} (Stock: {prod.stock})</span>
+                                    <span className="text-gray-500">₹{prod.price} (Stock: {prod.stock})</span>
                                   </button>
                                 ))
                               ) : (
@@ -322,7 +326,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
                           className="w-16 text-center border border-gray-300 rounded px-2 py-1"
                         />
                         <span className="text-gray-500">×</span>
-                        <span className="font-medium">${product.price || 0}</span>
+                        <span className="font-medium">₹{product.price || 0}</span>
                       </div>
                       <button 
                         onClick={() => removeProduct(index)} 
@@ -345,7 +349,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold">Total Amount</span>
                     <span className="text-2xl font-bold text-gray-900">
-                      ${calculateTotal().toLocaleString()}
+                      ₹{calculateTotal().toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -369,8 +373,8 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
                     {discountApplied && (
                       <div className="text-green-700 text-sm mt-2 font-medium flex items-center gap-2">
                         <span>Discounted Price:</span>
-                        <span className="text-lg font-bold">${(orderData.products.reduce((sum, product) => sum + (product.price * product.quantity), 0) * 0.9).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                        <span className="line-through text-gray-400 text-base">${orderData.products.reduce((sum, product) => sum + (product.price * product.quantity), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        <span className="text-lg font-bold">₹{(orderData.products.reduce((sum, product) => sum + (product.price * product.quantity), 0) * 0.9).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        <span className="line-through text-gray-400 text-base">₹{orderData.products.reduce((sum, product) => sum + (product.price * product.quantity), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                       </div>
                     )}
                   </div>
@@ -390,7 +394,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
                       name="customerName" 
                       value={orderData.customerName} 
                       onChange={e => { handleChange(e); if (onCustomerChange) onCustomerChange(e.target.value, orderData.customerNumber); }}
-                      placeholder="John Doe" 
+                      placeholder="Hari Bahadur" 
                       className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -401,7 +405,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
                       name="email" 
                       value={orderData.email} 
                       onChange={handleChange} 
-                      placeholder="john.doe@email.com" 
+                      placeholder="haribahadur@email.com" 
                       className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -412,7 +416,7 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
                       name="customerNumber" 
                       value={orderData.customerNumber} 
                       onChange={e => { handleChange(e); if (onCustomerChange) onCustomerChange(orderData.customerName, e.target.value); }}
-                      placeholder="+1 (555) 123-4567" 
+                      placeholder="+977 9841002298" 
                       className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -423,7 +427,18 @@ export default function AddOrderModal({ isOpen, onClose, onSave, existingOrder, 
                       name="customerAddress" 
                       value={orderData.customerAddress} 
                       onChange={handleChange} 
-                      placeholder="123 Main St, New York, NY 10001" 
+                      placeholder="Dillibazar, Kathmandu" 
+                      className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Delivery By</label>
+                    <input 
+                      name="deliveryBy" 
+                      value={orderData.deliveryBy} 
+                      onChange={handleChange} 
+                      placeholder="Hari Bahadur" 
                       className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
