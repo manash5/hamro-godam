@@ -11,6 +11,23 @@ export async function GET(request) {
   }
   try {
     await connectToDB();
+    const url = new URL(request.url);
+    const stats = url.searchParams.get('stats');
+    if (stats === 'true') {
+      // Get total orders
+      const totalOrders = await Order.countDocuments();
+      // Get unique customer names
+      const uniqueCustomers = await Order.distinct('customerName');
+      const totalCustomers = uniqueCustomers.length;
+      // Get two most recent orders
+      const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(2);
+      return NextResponse.json({
+        totalOrders,
+        totalCustomers,
+        recentOrders
+      }, { status: 200 });
+    }
+    // Default: return all orders
     const orders = await Order.find().sort({ createdAt: -1 });
     return NextResponse.json({ data: orders }, { status: 200 });
   } catch (error) {
