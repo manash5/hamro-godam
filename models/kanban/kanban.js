@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const TaskSchema = new mongoose.Schema({
+const KanbanSchema = new mongoose.Schema({
   title: {
     type: String,
     required: [true, 'Task title is required'],
@@ -37,10 +37,10 @@ const TaskSchema = new mongoose.Schema({
 });
 
 
-TaskSchema.pre('save', function(next) {
+KanbanSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
 
-const Task = mongoose.models.Task || mongoose.model('Task', TaskSchema);
-export default Task;
+const Kanban = mongoose.models.Kanban || mongoose.model('Kanban', KanbanSchema);
+export default Kanban;

@@ -5,6 +5,8 @@ import { Search, ShoppingBag, Users, Package, TrendingUp, RefreshCw, CheckCircle
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import GenerateReportButton from '../../../components/GenerateReportButton';
+import TokenManager from '@/utils/tokenManager';
+import AuthGuard from '@/components/AuthGuard';
 
 const page = () => {
   const dashboardRef = useRef(null);
@@ -24,9 +26,9 @@ const page = () => {
   const [salesAmount, setSalesAmount] = useState(0);
   const [discountCount, setDiscountCount] = useState(0);
 
-  // Helper: get token from localStorage
+  // Helper: get token from TokenManager
   const getToken = () => {
-    return localStorage.getItem('token');
+    return TokenManager.getToken(false);
   };
 
   // Helper: get employeeId from token (decode JWT)
@@ -41,14 +43,17 @@ const page = () => {
     }
   };
 
-  // Fetch employee name and store in localStorage
+  // Fetch user name and store in localStorage
   useEffect(() => {
-    const fetchEmployeeName = async () => {
+    const fetchUserName = async () => {
+      // Check for admin data first (since this is admin dashboard)
       let name = localStorage.getItem('admin');
       if (name) {
         setUserName(name);
         return;
       }
+      
+      // If no admin data, try to fetch from API
       const token = getToken();
       const employeeId = getEmployeeIdFromToken();
       if (!token || !employeeId) return;
@@ -61,11 +66,39 @@ const page = () => {
           name = data.data?.name || 'User';
           setUserName(name);
           localStorage.setItem('admin', name);
+          // Also store email if available
+          if (data.data?.email) {
+            localStorage.setItem('adminEmail', data.data.email);
+          }
         }
       } catch {}
     };
-    fetchEmployeeName();
+    fetchUserName();
   }, []);
+
+  // Add event listener to refresh user data when localStorage changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'admin') {
+        setUserName(e.newValue || 'User');
+      }
+    };
+
+    // Also check for user changes on focus (in case localStorage was updated in another tab)
+    const handleFocus = () => {
+      const name = localStorage.getItem('admin');
+      if (name && name !== userName) {
+        setUserName(name);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [userName]);
 
   // Fetch products and orders, then aggregate dashboard data
   useEffect(() => {
@@ -128,14 +161,24 @@ const page = () => {
       // Sales Amount (sum of totalAmount for delivered orders)
       const salesAmt = orderData.filter(o => o.status === 'delivered').reduce((sum, o) => sum + (o.totalAmount || 0), 0);
       setSalesAmount(salesAmt);
-      // Discount: count customers with more than 5 orders
-      const customerOrderCount = {};
+      // Discount: sum of 10% of the totalAmount of the sixth order for each customer with >5 orders
+      const ordersByCustomer = {};
       orderData.forEach(o => {
-        if (!customerOrderCount[o.customerName]) customerOrderCount[o.customerName] = 0;
-        customerOrderCount[o.customerName] += 1;
+        if (!ordersByCustomer[o.customerName]) ordersByCustomer[o.customerName] = [];
+        ordersByCustomer[o.customerName].push(o);
       });
-      const discount = Object.values(customerOrderCount).filter(count => count > 5).length;
-      setDiscountCount(discount);
+      let discountSum = 0;
+      Object.values(ordersByCustomer).forEach(orderList => {
+        if (orderList.length > 5) {
+          // Sort by createdAt ascending
+          orderList.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+          const sixthOrder = orderList[5];
+          if (sixthOrder && sixthOrder.totalAmount) {
+            discountSum += sixthOrder.totalAmount * 0.10;
+          }
+        }
+      });
+      setDiscountCount(discountSum);
     };
     fetchData();
   }, []);
@@ -217,7 +260,7 @@ const page = () => {
   };
 
   return (
-    <>
+    <AuthGuard requireAuth={true} isEmployeeRoute={false}>
       <div
         className="flex min-h-screen"
         style={{ backgroundColor: '#f1f5f9' }}
@@ -299,7 +342,7 @@ const page = () => {
                     <div className="text-2xl font-bold text-gray-900 mb-1">{customerCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Customers</span>
-                      <span className="text-red-500 text-sm font-medium">-5%</span>
+                      {/* Removed percentage change */}
                     </div>
                   </div>
 
@@ -313,7 +356,7 @@ const page = () => {
                     <div className="text-2xl font-bold text-gray-900 mb-1">{productCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Products</span>
-                      <span className="text-green-500 text-sm font-medium">+18%</span>
+                      {/* Removed percentage change */}
                     </div>
                   </div>
 
@@ -327,7 +370,7 @@ const page = () => {
                     <div className="text-2xl font-bold text-gray-900 mb-1">{salesCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Sales</span>
-                      <span className="text-green-500 text-sm font-medium">+33%</span>
+                      {/* Removed percentage change */}
                     </div>
                   </div>
 
@@ -341,7 +384,7 @@ const page = () => {
                     <div className="text-2xl font-bold text-gray-900 mb-1">{duesCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Refunds</span>
-                      <span className="text-red-500 text-sm font-medium">-12%</span>
+                      {/* Removed percentage change */}
                     </div>
                   </div>
                 </div>
@@ -367,12 +410,6 @@ const page = () => {
                         <span className="text-gray-700">Dues</span>
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-semibold text-gray-900">{duesCount}</span>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
-                              <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
-                            </svg>
-                            <span className="text-sm text-green-500">+124%</span>
-                          </div>
                         </div>
                       </div>
 
@@ -380,12 +417,6 @@ const page = () => {
                         <span className="text-gray-700">Pending Orders</span>
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-semibold text-gray-900">{pendingCount}</span>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
-                              <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
-                            </svg>
-                            <span className="text-sm text-red-500">-56%</span>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -408,25 +439,13 @@ const page = () => {
                         <span className="text-gray-700">Sales</span>
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-semibold text-gray-900">{salesAmount}</span>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12">
-                              <path d="M6 2l4 4H7v4H5V6H2l4-4z"/>
-                            </svg>
-                            <span className="text-sm text-green-500">+24%</span>
-                          </div>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700">Discount</span>
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg font-semibold text-gray-900">{discountCount}</span>
-                          <div className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 12 12">
-                              <path d="M6 10L2 6h3V2h2v4h3l-4 4z"/>
-                            </svg>
-                            <span className="text-sm text-red-500">-12%</span>
-                          </div>
+                          <span className="text-lg font-semibold text-gray-900">{discountCount.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -514,7 +533,7 @@ const page = () => {
           </div>
         </div>
       </div>
-    </>
+    </AuthGuard>
   )
 }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
-import Task from '@/models/kanban/kanban';
+import Kanban from '@/models/kanban/kanban';
 import { verifyToken } from '@/utils/auth';
 
 // POST - Create a new task
@@ -43,7 +43,7 @@ export async function POST(request) {
       createdAt: new Date()
     });
 
-    const newTask = new Task({
+    const newTask = new Kanban({
       title: body.title,
       category: body.category,
       description: body.description,
@@ -112,7 +112,7 @@ export async function GET(request) {
     }
     
     console.log('Fetching tasks with query:', query);
-    const tasks = await Task.find(query).sort({ createdAt: -1 });
+    const tasks = await Kanban.find(query).sort({ createdAt: -1 });
     
     return NextResponse.json(
       { data: tasks, message: 'Tasks fetched successfully' },
