@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
 import AddOrderModal from '@/components/order/AddOrderModel';
-
-
+import AuthGuard from '@/components/AuthGuard';
+import TokenManager from '@/utils/tokenManager';
 
 export default function OrdersPage() {
   const [editOrder, setEditOrder] = useState(null);
@@ -26,7 +26,7 @@ export default function OrdersPage() {
  
   useEffect(() => {
     const fetchOrders = async () => {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/order', {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
@@ -111,7 +111,7 @@ export default function OrdersPage() {
 
   const handleSaveOrder = async (orderData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/order', {
         method: 'POST',
         headers: {
@@ -151,7 +151,7 @@ export default function OrdersPage() {
 
   const handleEditOrder = async (orderData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch(`/api/order/${editOrder.id}`, {
         method: 'PATCH',
         headers: {
@@ -192,7 +192,7 @@ export default function OrdersPage() {
 
   const handleDeleteOrder = async (orderId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch(`/api/order/${orderId}`, {
         method: 'DELETE',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
@@ -251,10 +251,11 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-100 text-balck">
-      <Sidebar />
+    <AuthGuard requireAuth={true} isEmployeeRoute={false}>
+      <div className="flex h-screen bg-slate-100 text-balck">
+        <Sidebar />
 
-      <div className="flex-1 overflow-auto py-10">
+        <div className="flex-1 overflow-auto py-10">
         <div className="bg-slate-100 px-6 py-6 border-b border-gray-100 flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold text-gray-900">Orders</h1>
@@ -485,6 +486,7 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

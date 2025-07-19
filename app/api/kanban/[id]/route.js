@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToDB from '@/lib/connectDb';
-import Task from '@/models/kanban/kanban';
+import Kanban from '@/models/kanban/kanban';
 import { verifyToken } from '@/utils/auth';
 import mongoose from 'mongoose';
 
@@ -19,7 +19,7 @@ export async function GET(request, { params }) {
       );
     }
     
-    const task = await Task.findById(id);
+    const task = await Kanban.findById(id);
     
     if (!task) {
       return NextResponse.json(
@@ -65,7 +65,7 @@ export async function PUT(request, { params }) {
       );
     }
     
-    const updatedTask = await Task.findByIdAndUpdate(id, body, {
+    const updatedTask = await Kanban.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true
     });
@@ -111,7 +111,7 @@ export async function DELETE(request, { params }) {
       );
     }
     
-    const deletedTask = await Task.findByIdAndDelete(id);
+    const deletedTask = await Kanban.findByIdAndDelete(id);
     
     if (!deletedTask) {
       return NextResponse.json(

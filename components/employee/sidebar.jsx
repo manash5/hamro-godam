@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Logo from '../Logo' 
 import { 
   LayoutDashboard, 
@@ -13,14 +13,65 @@ import {
   Store, 
   BookUser,
   Trello, 
-  NotebookText, 
+  NotebookText,
+  LogOut,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
+import LogoutManager from '@/utils/logout';
+import TokenManager from '@/utils/tokenManager';
 
 const Sidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [userName, setUserName] = useState('User');
+  const [userEmail, setUserEmail] = useState('user@example.com');
+
+  // Get user info from localStorage (employee only)
+  useEffect(() => {
+    const updateUserInfo = () => {
+      const name = localStorage.getItem('employee');
+      const email = localStorage.getItem('employeeEmail');
+      if (name) {
+        setUserName(name);
+      }
+      if (email) {
+        setUserEmail(email);
+      }
+    };
+
+    // Update immediately
+    updateUserInfo();
+
+    // Also listen for storage changes
+    const handleStorageChange = (e) => {
+      if (e.key === 'employee') {
+        setUserName(e.newValue || 'User');
+      }
+      if (e.key === 'employeeEmail') {
+        setUserEmail(e.newValue || 'user@example.com');
+      }
+    };
+
+    // Also check for user changes on focus (in case localStorage was updated in another tab)
+    const handleFocus = () => {
+      const name = localStorage.getItem('employee');
+      const email = localStorage.getItem('employeeEmail');
+      if (name && name !== userName) {
+        setUserName(name);
+      }
+      if (email && email !== userEmail) {
+        setUserEmail(email);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [userName, userEmail]);
 
   const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/employees/dashboard' },
@@ -45,6 +96,10 @@ const Sidebar = () => {
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  const handleLogout = () => {
+    LogoutManager.logoutFromCurrentPage();
   };
 
   return (
@@ -82,24 +137,25 @@ const Sidebar = () => {
         </div>
       )}
 
-      <div className="bottom-6 left-0 right-0 px-4 mb-10">
-          <div className={`flex items-center space-x-3 p-3 rounded-xl bg-white/5 border border-white/10 ${
-            isCollapsed ? 'justify-center' : ''
-          }`}>
-            <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-semibold text-sm">U</span>
-            </div>
-            {!isCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">User Name</p>
-                <p className="text-xs text-gray-400 truncate">user@example.com</p>
-              </div>
-            )}
+      {/* User Profile Section - Moved to top */}
+      <div className="px-4 mb-6">
+        <div className={`flex items-center space-x-3 p-3 rounded-xl bg-white/5 border border-white/10 ${
+          isCollapsed ? 'justify-center' : ''
+        }`}>
+          <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
           </div>
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{userName}</p>
+              <p className="text-xs text-gray-400 truncate">{userEmail}</p>
+            </div>
+          )}
         </div>
+      </div>
 
       {/* Navigation */}
-      <nav className="px-4 space-y-2">
+      <nav className="px-4 space-y-2 flex-1">
         {sidebarItems.map((item, index) => (
           <button
             key={index}
@@ -131,6 +187,31 @@ const Sidebar = () => {
           </button>
         ))}
       </nav>
+
+      {/* Logout Button - At the bottom */}
+      <div className="px-4 mb-6">
+        <button
+          onClick={handleLogout}
+          className={`flex items-center space-x-3 px-4 py-3 rounded-xl w-full text-left transition-all duration-300 ease-in-out group hover:bg-red-600/20 text-gray-300 hover:text-red-300 border border-transparent hover:border-red-500/40 ${
+            isCollapsed ? 'justify-center' : ''
+          }`}
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0 group-hover:text-red-400 transition-colors duration-300" />
+          
+          <span className={`font-medium transition-all duration-300 ease-in-out whitespace-nowrap ${
+            isCollapsed ? 'opacity-0 w-0 overflow-hidden ml-0' : 'opacity-100'
+          }`}>
+            Logout
+          </span>
+
+          {/* Tooltip for collapsed state */}
+          {isCollapsed && (
+            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+              Logout
+            </div>
+          )}
+        </button>
+      </div>
     </div>
     </div>
   );

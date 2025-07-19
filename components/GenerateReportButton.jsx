@@ -110,16 +110,11 @@ const GenerateReportButton = ({ chartRef }) => {
 
   return (
     <button
-      className="group relative overflow-hidden px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5"
-      style={{ background: 'linear-gradient(to right, #3b82f6, #6366f1)', color: '#fff' }}
       onClick={handleGenerateReport}
+      className="flex items-center gap-2 px-6 py-3 rounded-lg bg-[#1e3a8a] text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
     >
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent)', transform: 'skewX(-12deg) translateX(-100%)' }}></div>
-      <div className="relative flex items-center space-x-2">
-        <FileText className="w-4 h-4 group-hover:rotate-3 transition-transform duration-300" />
-        <span>Generate Report</span>
-        <Sparkles className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
-      </div>
+      <FileText className="w-5 h-5" />
+      Generate Report
     </button>
   );
 };

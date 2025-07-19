@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Search, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
-
-import Sidebar from '../../../components/sidebar'
+import Sidebar from '../../../components/sidebar';
+import AuthGuard from '@/components/AuthGuard';
+import TokenManager from '@/utils/tokenManager';
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,7 +49,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/product', {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
@@ -76,7 +77,7 @@ export default function ProductsPage() {
       const fetchSuppliers = async () => {
         setSupplierLoading(true);
         try {
-          const token = localStorage.getItem('token');
+          const token = TokenManager.getToken(false);
           const res = await fetch('/api/supplier', {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           });
@@ -151,7 +152,7 @@ export default function ProductsPage() {
     const formData = new FormData();
     formData.append('image', file); // <-- field name must be 'image' for upload/route.js
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/upload', { // <-- use /api/upload
         method: 'POST',
         body: formData,
@@ -182,7 +183,7 @@ export default function ProductsPage() {
   const handleAddNewSupplier = async () => {
     setAddingSupplier(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/supplier', {
         method: 'POST',
         headers: {
@@ -218,7 +219,7 @@ export default function ProductsPage() {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch('/api/product', {
         method: 'POST',
         headers: {
@@ -263,7 +264,7 @@ export default function ProductsPage() {
   const handleEditProduct = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch(`/api/product/${editProduct.id || editProduct._id}`, {
         method: 'PATCH',
         headers: {
@@ -308,7 +309,7 @@ export default function ProductsPage() {
 
   const handleDeleteProduct = async (productId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = TokenManager.getToken(false);
       const res = await fetch(`/api/product/${productId}`, {
         method: 'DELETE',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
@@ -391,10 +392,11 @@ export default function ProductsPage() {
   }, [dropdownOpen]);
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto bg-slate-100 pt-10">
+    <AuthGuard requireAuth={true} isEmployeeRoute={false}>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto bg-slate-100 pt-10">
         {/* Header */}
         <div className="bg-slate-100 border-b border-gray-100 px-6 py-4 rounded-xl mb-5 mx-5">
           <div className="flex items-center justify-between">
@@ -1034,6 +1036,7 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
