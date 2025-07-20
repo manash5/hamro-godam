@@ -24,6 +24,7 @@ const page = () => {
   const [salesCount, setSalesCount] = useState(0);
   const [duesCount, setDuesCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
+  const [refundsCount, setRefundsCount] = useState(0);
   const [graphData, setGraphData] = useState([]);
   const [salesAmount, setSalesAmount] = useState(0);
   const [discountCount, setDiscountCount] = useState(0);
@@ -150,6 +151,8 @@ const page = () => {
       setDuesCount(orderData.filter(o => o.status === 'pending').length);
       // Pending (shipped orders)
       setPendingCount(orderData.filter(o => o.status === 'shipped').length);
+      // Refunds (cancelled orders)
+      setRefundsCount(orderData.filter(o => o.status === 'cancelled').length);
       // Graph data (sales per month)
       const salesByMonth = {};
       orderData.forEach(order => {
@@ -199,7 +202,7 @@ const page = () => {
         
         if (productResponse.ok) {
           const productData = await productResponse.json();
-          const lowStockProducts = productData.data?.filter(product => product.stock < 5) || [];
+          const lowStockProducts = productData.data?.filter(product => product.stock < 10) || [];
           
           // Create notifications for low stock products
           for (const product of lowStockProducts) {
@@ -270,66 +273,72 @@ const page = () => {
     ));
   };
 
-  // Budget vs Expenses data
-  const budgetExpensesData = [
-    { month: 'Oct-15', budget: 65, expenses: 45, line: 75 },
-    { month: 'Nov-15', budget: 75, expenses: 65, line: 85 },
-    { month: 'Dec-15', budget: 35, expenses: 25, line: 75 },
-    { month: 'Jan-16', budget: 30, expenses: 25, line: 55 },
-    { month: 'Feb-16', budget: 25, expenses: 20, line: 40 },
-    { month: 'Mar-16', budget: 70, expenses: 55, line: 75 },
-    { month: 'Apr-16', budget: 45, expenses: 35, line: 65 },
-    { month: 'May-16', budget: 75, expenses: 30, line: 55 }
-  ];
+  // Generate chart data from real orders and products
+  const generateChartData = () => {
+    if (!orders.length) return [];
+    
+    // Get last 7 months
+    const months = [];
+    const currentDate = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      months.push({
+        month: date.toLocaleDateString('en-US', { month: 'short' }),
+        year: date.getFullYear(),
+        monthNum: date.getMonth()
+      });
+    }
 
-  // Earnings data (heights as percentages)
-  const earningsData = [70, 85, 75, 90, 100];
+    // Process orders by month
+    const monthlyData = months.map(({ month, year, monthNum }) => {
+      const monthOrders = orders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate.getFullYear() === year && orderDate.getMonth() === monthNum;
+      });
 
-  // Create SVG path for the red line
-  const createLinePath = (data) => {
-    const width = 100;
-    const height = 100;
-    const points = data.map((d, i) => {
-      const x = (i / (data.length - 1)) * width;
-      const y = height - d;
-      return `${x},${y}`;
+      // Calculate metrics for this month
+      const totalOrders = monthOrders.length;
+      const totalQuantity = monthOrders.reduce((sum, order) => {
+        return sum + (order.productQuantity?.reduce((qtySum, qty) => qtySum + (qty || 0), 0) || 0);
+      }, 0);
+      const totalRevenue = monthOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+      return {
+        month,
+        orders: totalOrders,
+        quantity: totalQuantity,
+        revenue: totalRevenue
+      };
     });
-    return `M ${points.join(' L ')}`;
+
+    return monthlyData;
   };
 
-  const lineValues = budgetExpensesData.map(d => d.line);
-  const linePath = createLinePath(lineValues);
-  const chartData = [
-    { month: 'Jan', blue: 115, yellow: 180, green: 50 },
-    { month: 'Feb', blue: 280, yellow: 200, green: 140 },
-    { month: 'Mar', blue: 310, yellow: 280, green: 190 },
-    { month: 'Apr', blue: 220, yellow: 150, green: 45 },
-    { month: 'May', blue: 240, yellow: 190, green: 115 },
-    { month: 'Jun', blue: 150, yellow: 200, green: 75 },
-    { month: 'Jul', blue: 95, yellow: 210, green: 95 }
-  ];
-
-  const maxValue = 350;
+  const chartData = generateChartData();
+  const maxValue = chartData.length > 0 ? Math.max(...chartData.map(d => Math.max(d.orders, d.quantity, d.revenue))) : 100;
 
   // Function to generate analysis text
   const generateAnalysis = () => {
-    const totalCustomers = 30567;
-    const totalProducts = 3037;
-    const totalSales = 20509;
-    const salesChange = '+33%';
-    const totalRefunds = 21647;
-    const refundsChange = '-12%';
-    const mostPopularProduct = products.reduce((max, p) => (parseInt(p.sold) > parseInt(max.sold) ? p : max), products[0]);
-    const highestSalesMonth = chartData.reduce((max, d) => (d.blue > max.blue ? d : max), chartData[0]);
+    const totalCustomers = customerCount;
+    const totalProducts = productCount;
+    const totalSales = salesCount;
+    const totalRevenue = salesAmount;
+    const totalDues = duesCount;
+    const totalPending = pendingCount;
+    
+    const mostPopularProduct = popularProducts.length > 0 ? popularProducts[0] : { name: 'No products', sold: '0' };
+    const highestSalesMonth = chartData.length > 0 ? chartData.reduce((max, d) => (d.revenue > max.revenue ? d : max), chartData[0]) : { month: 'No data', revenue: 0 };
 
     return (
       `Dashboard Analysis Report\n\n` +
       `- Total Customers: ${totalCustomers}\n` +
       `- Total Products: ${totalProducts}\n` +
-      `- Total Sales: ${totalSales} (${salesChange})\n` +
-      `- Total Refunds: ${totalRefunds} (${refundsChange})\n` +
+      `- Total Sales: ${totalSales}\n` +
+      `- Total Revenue: ₹${totalRevenue}\n` +
+      `- Total Dues: ${totalDues}\n` +
+      `- Pending Orders: ${totalPending}\n` +
       `- Most Popular Product: ${mostPopularProduct.name} (${mostPopularProduct.sold} sold)\n` +
-      `- Highest Sales Month: ${highestSalesMonth.month} (${highestSalesMonth.blue} units)\n`
+      `- Highest Revenue Month: ${highestSalesMonth.month} (₹${highestSalesMonth.revenue})\n`
     );
   };
 
@@ -458,7 +467,7 @@ const page = () => {
                         <RefreshCw className="w-6 h-6 text-green-600" />
                       </div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{duesCount}</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{refundsCount}</div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Refunds</span>
                       {/* Removed percentage change */}
@@ -534,72 +543,119 @@ const page = () => {
                   ref={chartRef}
                   style={{ backgroundColor: '#fff', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', marginTop: '1.5rem' }}
                 >
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '1.5rem', textAlign: 'center' }}>Units sold</h3>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', marginBottom: '1.5rem', textAlign: 'center' }}>Monthly Analytics</h3>
                   
                   {/* Chart */}
                   <div style={{ position: 'relative', height: '20rem' }}>
-                    {/* Y-axis labels */}
-                    <div style={{ position: 'absolute', left: 0, top: 0, fontSize: '0.75rem', color: '#9ca3af' }}>350</div>
-                    <div style={{ position: 'absolute', left: 0, top: '25%', fontSize: '0.75rem', color: '#9ca3af' }}>300</div>
-                    <div style={{ position: 'absolute', left: 0, top: '50%', fontSize: '0.75rem', color: '#9ca3af' }}>250</div>
-                    <div style={{ position: 'absolute', left: 0, top: '75%', fontSize: '0.75rem', color: '#9ca3af' }}>200</div>
-                    <div style={{ position: 'absolute', left: 0, bottom: '8rem', fontSize: '0.75rem', color: '#9ca3af' }}>150</div>
-                    <div style={{ position: 'absolute', left: 0, bottom: '4rem', fontSize: '0.75rem', color: '#9ca3af' }}>100</div>
-                    <div style={{ position: 'absolute', left: 0, bottom: 0, fontSize: '0.75rem', color: '#9ca3af' }}>50</div>
-                    <div style={{ position: 'absolute', left: 0, bottom: '-1rem', fontSize: '0.75rem', color: '#9ca3af' }}>0</div>
+                    {chartData.length > 0 ? (
+                      <>
+                        {/* Y-axis labels */}
+                        <div style={{ position: 'absolute', left: 0, top: 0, fontSize: '0.75rem', color: '#9ca3af' }}>{maxValue}</div>
+                        <div style={{ position: 'absolute', left: 0, top: '25%', fontSize: '0.75rem', color: '#9ca3af' }}>{Math.round(maxValue * 0.75)}</div>
+                        <div style={{ position: 'absolute', left: 0, top: '50%', fontSize: '0.75rem', color: '#9ca3af' }}>{Math.round(maxValue * 0.5)}</div>
+                        <div style={{ position: 'absolute', left: 0, top: '75%', fontSize: '0.75rem', color: '#9ca3af' }}>{Math.round(maxValue * 0.25)}</div>
+                        <div style={{ position: 'absolute', left: 0, bottom: '-1rem', fontSize: '0.75rem', color: '#9ca3af' }}>0</div>
 
-                    {/* Chart area */}
-                    <div style={{ marginLeft: '2rem', marginRight: '1rem', height: '18rem', position: 'relative' }}>
-                      <svg style={{ width: '100%', height: '100%' }} viewBox="0 0 400 280">
-                        {/* Grid lines */}
-                        <defs>
-                          <pattern id="grid" width="57" height="40" patternUnits="userSpaceOnUse">
-                            <path d="M 57 0 L 0 0 0 40" fill="none" stroke="#f3f4f6" strokeWidth="1"/>
-                          </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#grid)" />
-                        
-                        {/* Blue line */}
-                        <polyline
-                          fill="none"
-                          stroke="#3b82f6"
-                          strokeWidth="2"
-                          points="0,165 57,120 114,90 171,140 228,125 285,165 342,195"
-                        />
-                        
-                        {/* Yellow line */}
-                        <polyline
-                          fill="none"
-                          stroke="#fbbf24"
-                          strokeWidth="2"
-                          points="0,100 57,80 114,56 171,130 228,90 285,80 342,70"
-                        />
-                        
-                        {/* Green line */}
-                        <polyline
-                          fill="none"
-                          stroke="#10b981"
-                          strokeWidth="2"
-                          points="0,230 57,140 114,91 171,235 228,165 285,205 342,185"
-                        />
-                        
-                        {/* Data points */}
-                        {graphData.map((point, index) => (
-                          <g key={index}>
-                            <circle cx={index * 57} cy={280 - (point.count * 280 / maxValue)} r="4" fill="#3b82f6" />
-                            <circle cx={index * 57} cy={280 - (point.count * 280 / maxValue)} r="4" fill="#fbbf24" />
-                            <circle cx={index * 57} cy={280 - (point.count * 280 / maxValue)} r="4" fill="#10b981" />
-                          </g>
-                        ))}
-                      </svg>
-                    </div>
+                        {/* Chart area */}
+                        <div style={{ marginLeft: '2rem', marginRight: '1rem', height: '18rem', position: 'relative' }}>
+                          <svg style={{ width: '100%', height: '100%' }} viewBox="0 0 400 280">
+                            {/* Grid lines */}
+                            <defs>
+                              <pattern id="grid" width={400 / chartData.length} height="40" patternUnits="userSpaceOnUse">
+                                <path d={`M ${400 / chartData.length} 0 L 0 0 0 40`} fill="none" stroke="#f3f4f6" strokeWidth="1"/>
+                              </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grid)" />
+                            
+                            {/* Orders line */}
+                            <polyline
+                              fill="none"
+                              stroke="#3b82f6"
+                              strokeWidth="2"
+                              points={chartData.map((d, i) => {
+                                const x = (i / (chartData.length - 1)) * 400;
+                                const y = 280 - (d.orders * 280 / maxValue);
+                                return `${x},${y}`;
+                              }).join(' ')}
+                            />
+                            
+                            {/* Quantity line */}
+                            <polyline
+                              fill="none"
+                              stroke="#fbbf24"
+                              strokeWidth="2"
+                              points={chartData.map((d, i) => {
+                                const x = (i / (chartData.length - 1)) * 400;
+                                const y = 280 - (d.quantity * 280 / maxValue);
+                                return `${x},${y}`;
+                              }).join(' ')}
+                            />
+                            
+                            {/* Revenue line */}
+                            <polyline
+                              fill="none"
+                              stroke="#10b981"
+                              strokeWidth="2"
+                              points={chartData.map((d, i) => {
+                                const x = (i / (chartData.length - 1)) * 400;
+                                const y = 280 - (d.revenue * 280 / maxValue);
+                                return `${x},${y}`;
+                              }).join(' ')}
+                            />
+                            
+                            {/* Data points */}
+                            {chartData.map((point, index) => {
+                              const x = (index / (chartData.length - 1)) * 400;
+                              return (
+                                <g key={index}>
+                                  <circle cx={x} cy={280 - (point.orders * 280 / maxValue)} r="4" fill="#3b82f6" />
+                                  <circle cx={x} cy={280 - (point.quantity * 280 / maxValue)} r="4" fill="#fbbf24" />
+                                  <circle cx={x} cy={280 - (point.revenue * 280 / maxValue)} r="4" fill="#10b981" />
+                                </g>
+                              );
+                            })}
+                          </svg>
+                        </div>
 
-                    {/* X-axis labels */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', marginLeft: '2rem', marginRight: '1rem' }}>
-                      {graphData.map((point, index) => (
-                        <span key={index} style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{point.month}</span>
-                      ))}
-                    </div>
+                        {/* X-axis labels */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', marginLeft: '2rem', marginRight: '1rem' }}>
+                          {chartData.map((point, index) => (
+                            <span key={index} style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{point.month}</span>
+                          ))}
+                        </div>
+
+                        {/* Legend */}
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '12px', height: '2px', backgroundColor: '#3b82f6' }}></div>
+                            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Orders</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '12px', height: '2px', backgroundColor: '#fbbf24' }}></div>
+                            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Quantity</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '12px', height: '2px', backgroundColor: '#10b981' }}></div>
+                            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Revenue</span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        height: '100%',
+                        color: '#9ca3af'
+                      }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '0.5rem' }}>No Data Available</div>
+                        <div style={{ fontSize: '0.875rem', textAlign: 'center' }}>
+                          Start adding products and orders to see analytics here
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

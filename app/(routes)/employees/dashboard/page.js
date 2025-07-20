@@ -126,8 +126,8 @@ const Dashboard = () => {
         });
         const eventData = eventRes.ok ? (await eventRes.json()).data : [];
         setEventCount(eventData.length);
-        // Calculate low stock products
-        const lowStock = prodData.filter(p => p.stock < 5);
+        // Calculate low stock products (using same threshold as employee products page)
+        const lowStock = prodData.filter(p => p.stock < 10);
         setLowStockCount(lowStock.length);
       } catch (err) {
         // Handle error

@@ -48,7 +48,7 @@ const NotificationBell = () => {
       
       if (productResponse.ok) {
         const productData = await productResponse.json();
-        const lowStockProducts = productData.data?.filter(product => product.stock < 5) || [];
+        const lowStockProducts = productData.data?.filter(product => product.stock < 10) || [];
         
         // Create notifications for low stock products
         for (const product of lowStockProducts) {

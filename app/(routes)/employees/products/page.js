@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, MoreHorizontal, X } from 'lucide-react';
 import Sidebar from '@/components/employee/sidebar';
+import AddProductModal from '@/components/AddProductModal';
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -12,16 +13,6 @@ const ProductsPage = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({
-    name: '',
-    description: '',
-    stock: '',
-    price: '',
-    category: '',
-    supplier: '', // Optional: adjust as needed
-  });
-  const [adding, setAdding] = useState(false);
-  const [addError, setAddError] = useState(null);
 
   // Fetch products from backend
   const fetchProducts = async () => {
@@ -60,36 +51,6 @@ const ProductsPage = () => {
     if (activeTab === 'out-of-stock') return product.stock === 0;
     return true;
   });
-
-  // Add Product
-  const handleAddProduct = async (e) => {
-    e.preventDefault();
-    setAdding(true);
-    setAddError(null);
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/product', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }, 
-        body: JSON.stringify({
-          ...addForm,
-          stock: Number(addForm.stock),
-          price: Number(addForm.price),
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setShowAddModal(false);
-        setAddForm({ name: '', description: '', stock: '', price: '', category: '', supplier: '' });
-        fetchProducts();
-      } else {
-        setAddError(data.message || 'Failed to add product');
-      }
-    } catch (err) {
-      setAddError('Failed to add product');
-    }
-    setAdding(false);
-  };
 
   // Status helpers
   const getStatus = (product) => {
@@ -211,7 +172,7 @@ const ProductsPage = () => {
                     Status
                   </th>
                   <th className="text-left py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    Access
                   </th>
                 </tr>
               </thead>
@@ -248,9 +209,9 @@ const ProductsPage = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                          view details ⋮
-                        </button>
+                        <span className="text-gray-400 text-sm font-medium">
+                          View only
+                        </span>
                       </td>
                     </tr>
                   );
@@ -282,88 +243,14 @@ const ProductsPage = () => {
         </div>
 
         {/* Add Product Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-            <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
-              <button
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-                onClick={() => setShowAddModal(false)}
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <h2 className="text-xl font-bold mb-4">Add Product</h2>
-              <form onSubmit={handleAddProduct} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Name</label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    value={addForm.name}
-                    onChange={e => setAddForm(f => ({ ...f, name: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    value={addForm.description}
-                    onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Category</label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    value={addForm.category}
-                    onChange={e => setAddForm(f => ({ ...f, category: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Stock</label>
-                  <input
-                    type="number"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    value={addForm.stock}
-                    onChange={e => setAddForm(f => ({ ...f, stock: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Price</label>
-                  <input
-                    type="number"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    value={addForm.price}
-                    onChange={e => setAddForm(f => ({ ...f, price: e.target.value }))}
-                    required
-                  />
-                </div>
-                {/* Optional: Supplier field if needed */}
-                {/* <div>
-                  <label className="block text-sm font-medium text-gray-700">Supplier</label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    value={addForm.supplier}
-                    onChange={e => setAddForm(f => ({ ...f, supplier: e.target.value }))}
-                  />
-                </div> */}
-                {addError && <div className="text-red-500 text-sm">{addError}</div>}
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold"
-                  disabled={adding}
-                >
-                  {adding ? 'Adding...' : 'Add Product'}
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
+        <AddProductModal
+          open={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={fetchProducts}
+          showSupplier={true}
+          showImage={true}
+          employeeMode={true}
+        />
       </div>
     </div>
   );

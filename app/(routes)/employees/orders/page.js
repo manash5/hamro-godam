@@ -1,6 +1,6 @@
 "use client"
  import React, { useState, useEffect } from 'react';
-import { Search, Calendar, ChevronDown, Eye, MoreHorizontal } from 'lucide-react';
+import { Search, Calendar, ChevronDown, Eye, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import Sidebar from '@/components/employee/sidebar';
 import AddOrderModal from '@/components/order/AddOrderModel';
 
@@ -9,6 +9,8 @@ const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editOrder, setEditOrder] = useState(null);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({ totalOrders: 0, totalCustomers: 0, recentOrders: [] });
   const [search, setSearch] = useState("");
@@ -87,6 +89,42 @@ const OrdersPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Edit order handler
+  const handleEditOrder = async (orderPayload) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/order/${editOrder._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(orderPayload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowEditModal(false);
+        setEditOrder(null);
+        fetchOrders();
+        fetchStats();
+      } else {
+        setError(data.error || 'Failed to edit order');
+      }
+    } catch (err) {
+      setError('Failed to edit order');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Open edit modal
+  const openEditModal = (order) => {
+    setEditOrder(order);
+    setShowEditModal(true);
   };
 
   // Filter orders by search
@@ -217,11 +255,15 @@ const OrdersPage = () => {
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-4">
                       <span className="text-sm text-gray-900">{order.productQuantity?.reduce((a, b) => a + b, 0)}</span>
-                      <button className="text-blue-600 hover:text-blue-800">
-                        <Eye className="w-4 h-4" />
+                      <button 
+                        onClick={() => openEditModal(order)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit order"
+                      >
+                        <Edit className="w-4 h-4" />
                       </button>
                       <button className="text-gray-400 hover:text-gray-600">
-                        <MoreHorizontal className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -266,6 +308,28 @@ const OrdersPage = () => {
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onSave={handleAddOrder}
+        />
+        <AddOrderModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditOrder(null);
+          }}
+          onSave={handleEditOrder}
+          existingOrder={editOrder ? {
+            customerName: editOrder.customerName,
+            customerNumber: editOrder.customerNumber,
+            customerAddress: editOrder.customerAddress || "",
+            email: editOrder.email || "",
+            productName: editOrder.productName || [],
+            productQuantity: editOrder.productQuantity || [],
+            totalAmount: editOrder.totalAmount,
+            status: editOrder.status,
+            paymentMethod: editOrder.payment,
+            comment: "",
+            deliveryDate: editOrder.deliveryDate || "",
+            deliveryBy: editOrder.deliveryBy || "",
+          } : null}
         />
       </div>
     </div>

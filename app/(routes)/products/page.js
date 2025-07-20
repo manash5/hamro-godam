@@ -102,7 +102,7 @@ export default function ProductsPage() {
   // Function to determine status based on stock level
   const getProductStatus = (stock) => {
     if (stock === 0) return 'OUT OF STOCK';
-    if (stock < 5) return 'LOW STOCK';
+    if (stock < 10) return 'LOW STOCK';
     return 'ACTIVE';
   };
 
@@ -197,7 +197,7 @@ export default function ProductsPage() {
       const data = await res.json();
       if (res.ok && data.data) {
         setSuppliers(prev => [data.data, ...prev]);
-        setProductForm(prev => ({ ...prev, suppliers: [data.data.id, ...prev.suppliers] }));
+        setProductForm(prev => ({ ...prev, supplier: data.data.id }));
         setShowNewSupplierForm(false);
         setNewSupplier({
           name: '', email: '', contact_number: '', address: '', category: '', company_name: '',

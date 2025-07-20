@@ -314,7 +314,7 @@ export default function OrdersPage() {
                     order.customer,
                     order.phone,
                     order.date + ' ' + order.time,
-                    `$${order.amount.toLocaleString()}`,
+                    `₹${order.amount.toLocaleString()}`,
                     order.status,
                     order.itemsDetail,
                     order.payment,
@@ -432,7 +432,7 @@ export default function OrdersPage() {
                       <div>{order.date}</div>
                       <div className="text-xs text-gray-500">{order.time}</div>
                     </td>
-                    <td className="py-4 px-6 font-semibold">${order.amount.toLocaleString()}</td>
+                    <td className="py-4 px-6 font-semibold">₹{order.amount.toLocaleString()}</td>
                     <td className="py-4 px-6">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                         {order.status}
@@ -480,7 +480,7 @@ export default function OrdersPage() {
         isOpen={showAddOrderModal}
         onClose={() => setShowAddOrderModal(false)}
         onSave={handleSaveOrder}
-        showDiscountOption={addOrderCustomerOrderCount > 5}
+        showDiscountOption={addOrderCustomerOrderCount > 4}
         previousOrderCount={addOrderCustomerOrderCount}
         onCustomerChange={(name, number) => {
           // Called from modal when customer name/number changes
